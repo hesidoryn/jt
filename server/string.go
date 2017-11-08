@@ -11,6 +11,7 @@ import (
 func initStringHandlers() {
 	handlers["SET"] = handlerSet
 	handlers["GET"] = handlerGet
+	handlers["APPEND"] = handlerAppend
 	handlers["GETSET"] = handlerGetSet
 	handlers["STRLEN"] = handlerStrlen
 	handlers["INCR"] = handlerIncr
@@ -48,6 +49,24 @@ func handlerGet(args [][]byte, w *bufio.Writer) {
 	w.WriteString("\n")
 	w.Flush()
 	return
+}
+
+func handlerAppend(args [][]byte, w *bufio.Writer) {
+	if len(args) != 3 {
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		return
+	}
+
+	key := string(args[1])
+	append := string(args[2])
+	l, err := storage.Append(key, append)
+	if err == storage.ErrorWrongType {
+		sendResult(errorWrongType, w)
+		return
+	}
+
+	res := fmt.Sprintf(":%d", l)
+	sendResult(res, w)
 }
 
 func handlerGetSet(args [][]byte, w *bufio.Writer) {

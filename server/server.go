@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/hesidoryn/jt/storage"
 )
 
 var handlers = map[string]func(args [][]byte, w *bufio.Writer){}
@@ -20,12 +22,15 @@ const (
 	errorSyntaxError    = "-ERR syntax error"
 	errorNoSuchKey      = "-ERR no such key"
 	errorIsNotInteger   = "-ERR value is not an integer or out of range"
+	errorIsNotFloat     = "-ERR dict value is not a float"
 	errorNotFound       = "-ERR"
 	errorWrongType      = "-WRONGTYPE Operation against a key holding the wrong kind of value"
+	errorProtocolError  = "-ERR Protocol error: unbalanced quotes in request"
 )
 
 // Init function inits tcp server
 func Init(port string) {
+	storage.GetStorage()
 	initHandlers()
 
 	listen, err := net.Listen("tcp4", ":"+port)
@@ -53,7 +58,11 @@ func handleConnection(conn net.Conn) {
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
 		ln := scanner.Bytes()
-		args := bytes.Fields(ln)
+		args, err := parseArgs(ln)
+		if err != nil {
+			sendResult(errorProtocolError, w)
+			return
+		}
 		if len(args) == 0 {
 			continue
 		}
@@ -61,8 +70,7 @@ func handleConnection(conn net.Conn) {
 		command := string(bytes.ToUpper(args[0]))
 		handler, ok := handlers[command]
 		if !ok {
-			w.WriteString(fmt.Sprintf(errorUnknownCommand, args[0]))
-			w.Flush()
+			sendResult(fmt.Sprintf(errorUnknownCommand, args[0]), w)
 			continue
 		}
 
@@ -73,6 +81,8 @@ func handleConnection(conn net.Conn) {
 func initHandlers() {
 	initCommonHandlers()
 	initStringHandlers()
+	initListHandlers()
+	initDictHandlers()
 }
 
 // if len(fs) < 2 {

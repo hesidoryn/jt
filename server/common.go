@@ -13,8 +13,11 @@ func initCommonHandlers() {
 	handlers["DEL"] = handlerDelete
 	handlers["RENAME"] = handlerRename
 	handlers["TTL"] = handlerTTL
+	handlers["PERSIST"] = handlerPersist
 	handlers["EXPIRE"] = handlerExpire
 	handlers["TYPE"] = handlerType
+	handlers["KEYS"] = handlerKeys
+	handlers["EXISTS"] = handlerExists
 }
 
 func handlerPing(args [][]byte, w *bufio.Writer) {
@@ -72,6 +75,17 @@ func handlerTTL(args [][]byte, w *bufio.Writer) {
 	sendResult(res, w)
 }
 
+func handlerPersist(args [][]byte, w *bufio.Writer) {
+	if len(args) != 2 {
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		return
+	}
+
+	key := string(args[1])
+	res := storage.Persist(key)
+	sendResult(res, w)
+}
+
 func handlerExpire(args [][]byte, w *bufio.Writer) {
 	if len(args) != 3 {
 		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
@@ -102,5 +116,30 @@ func handlerType(args [][]byte, w *bufio.Writer) {
 
 	key := string(args[1])
 	res := storage.GetType(key)
+	sendResult(res, w)
+}
+
+func handlerKeys(args [][]byte, w *bufio.Writer) {
+	if len(args) != 2 {
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		return
+	}
+
+	search := string(args[1])
+	res := storage.Keys(search)
+	sendResult(res, w)
+}
+
+func handlerExists(args [][]byte, w *bufio.Writer) {
+	if len(args) < 2 {
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		return
+	}
+
+	keys := []string{}
+	for i := 1; i < len(args); i++ {
+		keys = append(keys, string(args[i]))
+	}
+	res := storage.Exists(keys)
 	sendResult(res, w)
 }
