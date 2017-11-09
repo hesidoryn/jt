@@ -1,3 +1,5 @@
+// Package jt is a redis-like in-memory database
+// By Heorhi Sidoryn
 package main
 
 import (
