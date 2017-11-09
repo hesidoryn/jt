@@ -7,6 +7,7 @@ import (
 	"github.com/hesidoryn/jt/storage"
 )
 
+// initDictHandlers inits handlers for dict values
 func initDictHandlers() {
 	handlers["DSET"] = handlerDSet
 	handlers["DGET"] = handlerDGet
@@ -17,6 +18,7 @@ func initDictHandlers() {
 	handlers["DINCRBYFLOAT"] = handlerDIncrByFloat
 }
 
+// handlerDSet is used for setting dict fields
 func handlerDSet(args [][]byte, c *client) {
 	if len(args) < 4 || len(args)%2 != 0 {
 		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)

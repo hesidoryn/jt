@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// JTClient is struct
 type JTClient struct {
 	config config
 	conn   net.Conn
@@ -34,6 +35,9 @@ func loadConfig(path string) config {
 	return c
 }
 
+// NewClient creates new jt client.
+// It returns this client if success and
+// returns error if failed.
 func NewClient(path string) (*JTClient, error) {
 	config := loadConfig(path)
 	conn, err := net.Dial("tcp", config.Host)
