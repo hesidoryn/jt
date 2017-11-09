@@ -82,7 +82,7 @@ func LPop(key string) (string, error) {
 
 	pop := li.Data[0]
 	li.Data = li.Data[1:]
-	res := fmt.Sprintf("$%d\n%s", len(pop), pop)
+	res := fmt.Sprintf("$%d\r\n%s", len(pop), pop)
 	return res, nil
 }
 
@@ -103,7 +103,7 @@ func RPop(key string) (string, error) {
 
 	pop := li.Data[len(li.Data)-1]
 	li.Data = li.Data[:len(li.Data)-1]
-	res := fmt.Sprintf("$%d\n%s", len(pop), pop)
+	res := fmt.Sprintf("$%d\r\n%s", len(pop), pop)
 	return res, nil
 }
 
@@ -184,7 +184,7 @@ func LIndex(key string, index int) (string, error) {
 	}
 
 	data := li.Data[index]
-	res := fmt.Sprintf(":%d\n%s", len(data), data)
+	res := fmt.Sprintf(":%d\r\n%s", len(data), data)
 	return res, nil
 }
 
@@ -227,7 +227,7 @@ func LRange(key string, start, end int) (string, error) {
 		result = append(result, fmt.Sprintf("$%d", len(li.Data[i])), li.Data[i])
 	}
 
-	res := fmt.Sprintf("*%d\n%s", len(result)/2, strings.Join(result, "\n"))
+	res := fmt.Sprintf("*%d\r\n%s", len(result)/2, strings.Join(result, "\r\n"))
 	return res, nil
 }
 

@@ -7,7 +7,7 @@ import (
 
 func sendResult(val string, w *bufio.Writer) {
 	w.WriteString(val)
-	w.WriteString("\n")
+	w.WriteString("\r\n")
 	w.Flush()
 }
 

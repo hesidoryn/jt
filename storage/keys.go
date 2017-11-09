@@ -92,8 +92,8 @@ func Keys(pattern string) string {
 		return "*0"
 	}
 
-	lres := fmt.Sprintf("*%d\n", len(res)/2)
-	result := lres + strings.Join(res, "\n")
+	lres := fmt.Sprintf("*%d\r\n", len(res)/2)
+	result := lres + strings.Join(res, "\r\n")
 	return result
 }
 

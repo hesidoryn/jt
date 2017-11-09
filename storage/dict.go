@@ -51,7 +51,7 @@ func DSet(key string, vals map[string]string) error {
 func DGet(key string, fields []string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return "*1\n$-1", nil
+		return "*1\r\n$-1", nil
 	}
 
 	di, ok := i.(*DictItem)
@@ -73,7 +73,7 @@ func DGet(key string, fields []string) (string, error) {
 		res = append(res, lval, val)
 	}
 
-	result := fmt.Sprintf("*%d\n%s", fcount, strings.Join(res, "\n"))
+	result := fmt.Sprintf("*%d\r\n%s", fcount, strings.Join(res, "\r\n"))
 	return result, nil
 }
 

@@ -82,7 +82,7 @@ func handlerGetSet(args [][]byte, c *client) {
 	val := string(args[2])
 	storage.Set(key, val)
 
-	res := fmt.Sprintf("$%d\n%s\n", len(val), oldVal)
+	res := fmt.Sprintf("$%d\r\n%s\r\n", len(val), oldVal)
 	sendResult(res, c.w)
 }
 
@@ -103,7 +103,7 @@ func handlerStrlen(args [][]byte, c *client) {
 		return
 	}
 
-	res := fmt.Sprintf(":%d\n", len(val))
+	res := fmt.Sprintf(":%d\r\n", len(val))
 	sendResult(res, c.w)
 }
 
