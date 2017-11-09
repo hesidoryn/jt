@@ -1,3 +1,11 @@
+// Package storage implements in-memory store.
+//
+// Overview
+//
+// Strings, lists and dicts can be stored.
+// Protocol is redis compatible except dicts.
+// >30 commands are realised.
+// Persistence is realised using boltdb and provides by SAVE command.
 package storage
 
 import (

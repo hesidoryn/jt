@@ -31,9 +31,12 @@ const (
 )
 
 var (
-	ErrorWrongType    = errors.New("wrong type")
+	// ErrorWrongType is sent when command is called for wrong type
+	ErrorWrongType = errors.New("wrong type")
+	// ErrorIsNotInteger is sent when command is called for non-integer value
 	ErrorIsNotInteger = errors.New("value is not integer")
-	ErrorIsNotFloat   = errors.New("value is not float")
+	// ErrorIsNotFloat is sent when command is called for non-float value
+	ErrorIsNotFloat = errors.New("value is not float")
 )
 
 // Save is used to make backups

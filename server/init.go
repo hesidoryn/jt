@@ -1,3 +1,4 @@
+// Package server implements tcp server to handle clients requests.
 package server
 
 import (
