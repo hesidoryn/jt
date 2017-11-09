@@ -1,4 +1,4 @@
-package client
+package jtclient
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (c *jtclient) sendCommand(cmd string, args ...string) (interface{}, error) {
+func (c *Client) sendCommand(cmd string, args ...string) (interface{}, error) {
 	command := cmd
 	for _, arg := range args {
 		command += fmt.Sprintf(" \"%s\"", arg)
@@ -25,7 +25,7 @@ func (c *jtclient) sendCommand(cmd string, args ...string) (interface{}, error) 
 	return c.readResponse()
 }
 
-func (c *jtclient) readResponse() (interface{}, error) {
+func (c *Client) readResponse() (interface{}, error) {
 	reader := bufio.NewReader(c.conn)
 
 	var line string

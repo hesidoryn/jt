@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Port     string `json:"port"`
 	Password string `json:"password"`
+	DB       string `json:"db"`
 }
 
 func LoadConfig(path string) Config {

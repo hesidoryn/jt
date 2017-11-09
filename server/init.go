@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/hesidoryn/jt/config"
-	"github.com/hesidoryn/jt/storage"
 )
 
 type client struct {
@@ -37,7 +36,6 @@ const (
 	errorIsNotInteger    = "-ERR value is not an integer or out of range"
 	errorIsNotFloat      = "-ERR dict value is not a float"
 	errorNoPassword      = "-ERR Client sent AUTH, but no password is set"
-	errorNotFound        = "-ERR"
 	errorWrongType       = "-WRONGTYPE Operation against a key holding the wrong kind of value"
 	errorInvalidPassword = "-ERR invalid password"
 	errorNoAuth          = "-NOAUTH Authentication required."
@@ -46,9 +44,8 @@ const (
 
 // Init function inits tcp server
 func Init(config config.Config) {
-	storage.GetStorage()
-	initHandlers()
 	password = config.Password
+	initHandlers()
 
 	listen, err := net.Listen("tcp4", ":"+config.Port)
 	defer listen.Close()
@@ -61,7 +58,7 @@ func Init(config config.Config) {
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 			continue
 		}
 
@@ -103,7 +100,7 @@ func handleConnection(c *client) {
 			continue
 		}
 
-		if command != auth && !c.isAuthorized {
+		if command != cmdAuth && !c.isAuthorized {
 			sendResult(errorNoAuth, c.w)
 			continue
 		}

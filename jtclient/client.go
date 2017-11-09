@@ -1,4 +1,5 @@
-package client
+// Package jtclient provides a client for making commands to jt server.
+package jtclient
 
 import (
 	"encoding/json"
@@ -7,8 +8,9 @@ import (
 	"os"
 )
 
-// jtclient is struct
-type jtclient struct {
+// Client is struct that contains tcp connection to jt server
+// and some configuration info.
+type Client struct {
 	config config
 	conn   net.Conn
 }
@@ -19,18 +21,18 @@ type config struct {
 }
 
 // NewClient creates new jt client
-func NewClient(path string) (*jtclient, error) {
+func NewClient(path string) (*Client, error) {
 	config := loadConfig(path)
 	conn, err := net.Dial("tcp", config.Host)
 	if err != nil {
-		return &jtclient{}, err
+		return &client{}, err
 	}
 
-	client := &jtclient{
+	c := &client{
 		config: config,
 		conn:   conn,
 	}
-	return client, nil
+	return c, nil
 }
 
 func loadConfig(path string) config {

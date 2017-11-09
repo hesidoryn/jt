@@ -28,7 +28,7 @@ func LPush(key, val string) (string, error) {
 	if !ok {
 		li := &ListItem{
 			Data: []string{val},
-			Type: TypeList,
+			Type: typeList,
 			TTL:  -1,
 		}
 		storage[key] = li
@@ -50,7 +50,7 @@ func RPush(key, val string) (string, error) {
 	if !ok {
 		li := &ListItem{
 			Data: []string{val},
-			Type: TypeList,
+			Type: typeList,
 			TTL:  -1,
 		}
 		storage[key] = li

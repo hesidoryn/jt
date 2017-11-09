@@ -9,6 +9,7 @@ import (
 
 	"github.com/hesidoryn/jt/config"
 	"github.com/hesidoryn/jt/server"
+	"github.com/hesidoryn/jt/storage"
 )
 
 func main() {
@@ -16,7 +17,6 @@ func main() {
 	flag.Parse()
 
 	config := config.LoadConfig(*configPath)
-
+	storage.Init(config)
 	server.Init(config)
-
 }

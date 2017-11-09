@@ -2,16 +2,20 @@ package server
 
 import (
 	"fmt"
+
+	"github.com/hesidoryn/jt/storage"
 )
 
 const (
-	auth = "AUTH"
-	ping = "PING"
+	cmdAuth = "AUTH"
+	cmdPing = "PING"
+	cmdSave = "SAVE"
 )
 
 func initServerHandlers() {
-	handlers[auth] = handlerAuth
-	handlers[ping] = handlerPing
+	handlers[cmdAuth] = handlerAuth
+	handlers[cmdPing] = handlerPing
+	handlers[cmdSave] = handlerSave
 }
 
 func handlerAuth(args [][]byte, c *client) {
@@ -43,4 +47,14 @@ func handlerPing(args [][]byte, c *client) {
 	}
 
 	sendResult(resultPONG, c.w)
+}
+
+func handlerSave(args [][]byte, c *client) {
+	if len(args) != 1 {
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+		return
+	}
+
+	storage.Save()
+	sendResult(resultOK, c.w)
 }

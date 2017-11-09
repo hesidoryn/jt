@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"path"
 	"strings"
@@ -9,7 +10,7 @@ import (
 func Delete(key string) (string, error) {
 	_, ok := storage[key]
 	if !ok {
-		return ":0", ErrorNotFound
+		return ":0", nil
 	}
 
 	resetTTL(key)
@@ -20,7 +21,7 @@ func Delete(key string) (string, error) {
 func Rename(key, newKey string) error {
 	i, ok := storage[key]
 	if !ok {
-		return ErrorNotFound
+		return errors.New("no such key")
 	}
 
 	resetTTL(key)
@@ -69,7 +70,7 @@ func GetTTL(key string) string {
 func GetType(key string) string {
 	i, ok := storage[key]
 	if !ok {
-		return TypeNone
+		return typeNone
 	}
 
 	return i.GetType()

@@ -28,7 +28,7 @@ func Set(key, val string) {
 
 	i := &StringItem{
 		Data: val,
-		Type: TypeString,
+		Type: typeString,
 		TTL:  -1,
 	}
 	storage[key] = i
@@ -37,7 +37,7 @@ func Set(key, val string) {
 func Get(key string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return "$-1", ErrorNotFound
+		return "$-1", nil
 	}
 
 	si, ok := i.(*StringItem)
@@ -54,7 +54,7 @@ func Append(key, val string) (string, error) {
 	if !ok {
 		i = &StringItem{
 			Data: val,
-			Type: TypeString,
+			Type: typeString,
 			TTL:  -1,
 		}
 		storage[key] = i
@@ -77,7 +77,7 @@ func GetSet(key, val string) (string, error) {
 	if !ok {
 		i := &StringItem{
 			Data: val,
-			Type: TypeString,
+			Type: typeString,
 			TTL:  -1,
 		}
 		storage[key] = i
@@ -86,7 +86,7 @@ func GetSet(key, val string) (string, error) {
 
 	resetTTL(key)
 
-	if old.GetType() != TypeString {
+	if old.GetType() != typeString {
 		return "", ErrorWrongType
 	}
 
@@ -94,7 +94,7 @@ func GetSet(key, val string) (string, error) {
 
 	new := &StringItem{
 		Data: val,
-		Type: TypeString,
+		Type: typeString,
 		TTL:  -1,
 	}
 	storage[key] = new
@@ -106,7 +106,7 @@ func GetSet(key, val string) (string, error) {
 func Strlen(key string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return "-1", ErrorNotFound
+		return "-1", nil
 	}
 
 	si, ok := i.(*StringItem)
@@ -123,7 +123,7 @@ func IncrBy(key string, by int) (string, error) {
 	if !ok {
 		i := &StringItem{
 			Data: strconv.Itoa(by),
-			Type: TypeString,
+			Type: typeString,
 			TTL:  -1,
 		}
 		storage[key] = i

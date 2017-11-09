@@ -1,4 +1,4 @@
-package client
+package jtclient
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func (c *jtclient) Auth() error {
+func (c *Client) Auth() error {
 	command := fmt.Sprintf("AUTH \"%s\"\n", c.config.Password)
 	_, err := c.conn.Write([]byte(command))
 	if err != nil {

@@ -6,30 +6,36 @@ import (
 	"strings"
 )
 
+// DictItem is struct for dict.
+// It implements Item interface.
 type DictItem struct {
 	Data map[string]string
 	TTL  int
 	Type string
 }
 
+// GetType returns "+dict" for DictItem
 func (i *DictItem) GetType() string {
 	return i.Type
 }
 
+// SetTTL sets time to live value for dict item
 func (i *DictItem) SetTTL(ttl int) {
 	i.TTL = ttl
 }
 
+// GetTTL returns time to live value for dict item
 func (i *DictItem) GetTTL() int {
 	return i.TTL
 }
 
+// DSet is used to create dict with some fields
 func DSet(key string, vals map[string]string) error {
 	i, ok := storage[key]
 	if !ok {
 		di := &DictItem{
 			Data: vals,
-			Type: TypeDict,
+			Type: typeDict,
 			TTL:  -1,
 		}
 		storage[key] = di
@@ -48,6 +54,7 @@ func DSet(key string, vals map[string]string) error {
 	return nil
 }
 
+// DGet returns expected dict fields
 func DGet(key string, fields []string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
@@ -77,6 +84,7 @@ func DGet(key string, fields []string) (string, error) {
 	return result, nil
 }
 
+// DDel removes field from dict
 func DDel(key, field string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
@@ -92,6 +100,7 @@ func DDel(key, field string) (string, error) {
 	return ":1", nil
 }
 
+// DExists checks if field exists in dict
 func DExists(key, field string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
@@ -111,6 +120,7 @@ func DExists(key, field string) (string, error) {
 	return ":1", nil
 }
 
+// DLen returns dict's length
 func DLen(key string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
@@ -126,13 +136,15 @@ func DLen(key string) (string, error) {
 	return res, nil
 }
 
+// DIncrBy increments by "by" value dict's field
+// or returns error
 func DIncrBy(key, field string, by int) (string, error) {
 	i, ok := storage[key]
 	if !ok {
 		d := map[string]string{field: strconv.Itoa(by)}
 		di := &DictItem{
 			Data: d,
-			Type: TypeDict,
+			Type: typeDict,
 			TTL:  -1,
 		}
 		storage[key] = di
@@ -166,6 +178,8 @@ func DIncrBy(key, field string, by int) (string, error) {
 	return res, nil
 }
 
+// DIncrByFloat increments by "by" value dict's field
+// or returns error
 func DIncrByFloat(key, field string, by float64) (string, error) {
 	i, ok := storage[key]
 	if !ok {
@@ -173,7 +187,7 @@ func DIncrByFloat(key, field string, by float64) (string, error) {
 		d := map[string]string{field: val}
 		di := &DictItem{
 			Data: d,
-			Type: TypeDict,
+			Type: typeDict,
 			TTL:  -1,
 		}
 		storage[key] = di
