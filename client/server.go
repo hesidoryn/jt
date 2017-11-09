@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func (c *JTClient) Auth() error {
+func (c *jtclient) Auth() error {
 	command := fmt.Sprintf("AUTH \"%s\"\n", c.config.Password)
 	_, err := c.conn.Write([]byte(command))
 	if err != nil {
@@ -15,6 +15,5 @@ func (c *JTClient) Auth() error {
 
 	buf := bytes.Buffer{}
 	_, err = io.Copy(&buf, c.conn)
-	fmt.Println(buf.String())
 	return err
 }

@@ -77,55 +77,56 @@ func DGet(key string, fields []string) (string, error) {
 	return result, nil
 }
 
-func DDel(key, field string) (int, error) {
+func DDel(key, field string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return 0, nil
+		return ":0", nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return ":0", ErrorWrongType
 	}
 
 	delete(di.Data, field)
-	return 1, nil
+	return ":1", nil
 }
 
-func DExists(key, field string) (int, error) {
+func DExists(key, field string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return 0, nil
+		return ":0", nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	_, ok = di.Data[field]
 	if !ok {
-		return 0, nil
+		return ":0", nil
 	}
 
-	return 1, nil
+	return ":1", nil
 }
 
-func DLen(key string) (int, error) {
+func DLen(key string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return 0, nil
+		return ":0", nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return "", ErrorWrongType
 	}
 
-	return len(di.Data), nil
+	res := fmt.Sprintf(":%d", len(di.Data))
+	return res, nil
 }
 
-func DIncrBy(key, field string, by int) (int, error) {
+func DIncrBy(key, field string, by int) (string, error) {
 	i, ok := storage[key]
 	if !ok {
 		d := map[string]string{field: strconv.Itoa(by)}
@@ -135,60 +136,67 @@ func DIncrBy(key, field string, by int) (int, error) {
 			TTL:  -1,
 		}
 		storage[key] = di
-		return by, nil
+
+		res := fmt.Sprintf(":%d", by)
+		return res, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	val, ok := di.Data[field]
 	if !ok {
 		di.Data[field] = strconv.Itoa(by)
-		return by, nil
+
+		res := fmt.Sprintf(":%d", by)
+		return res, nil
 	}
 
 	valInt, err := strconv.Atoi(val)
 	if err != nil {
-		return 0, ErrorIsNotInteger
+		return ":0", ErrorIsNotInteger
 	}
 
-	res := valInt + by
-	di.Data[field] = strconv.Itoa(res)
+	newData := valInt + by
+	di.Data[field] = strconv.Itoa(newData)
+
+	res := fmt.Sprintf(":%d", newData)
 	return res, nil
 }
 
-func DIncrByFloat(key, field string, by float64) (float64, error) {
+func DIncrByFloat(key, field string, by float64) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		d := map[string]string{field: strconv.FormatFloat(by, 'f', -1, 64)}
+		val := strconv.FormatFloat(by, 'f', -1, 64)
+		d := map[string]string{field: val}
 		di := &DictItem{
 			Data: d,
 			Type: TypeDict,
 			TTL:  -1,
 		}
 		storage[key] = di
-		return by, nil
+		return val, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	val, ok := di.Data[field]
 	if !ok {
 		di.Data[field] = strconv.FormatFloat(by, 'f', -1, 64)
-		return by, nil
+		return di.Data[field], nil
 	}
 
 	valFloat, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		return 0, ErrorIsNotFloat
+		return "", ErrorIsNotFloat
 	}
 
 	res := valFloat + by
 	di.Data[field] = strconv.FormatFloat(res, 'f', -1, 64)
-	return res, nil
+	return di.Data[field], nil
 }

@@ -1,6 +1,9 @@
 package storage
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type StringItem struct {
 	Data string
@@ -34,18 +37,19 @@ func Set(key, val string) {
 func Get(key string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return "", ErrorNotFound
+		return "$-1", ErrorNotFound
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "", ErrorWrongType
+		return "$-1", ErrorWrongType
 	}
 
-	return si.Data, nil
+	res := fmt.Sprintf("$%d\r\n%s", len(si.Data), si.Data)
+	return res, nil
 }
 
-func Append(key, val string) (int, error) {
+func Append(key, val string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
 		i = &StringItem{
@@ -54,22 +58,30 @@ func Append(key, val string) (int, error) {
 			TTL:  -1,
 		}
 		storage[key] = i
-		return len(val), nil
+		res := fmt.Sprintf(":%d", len(val))
+		return res, nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return ":0", ErrorWrongType
 	}
 
 	si.Data += val
-	return len(si.Data), nil
+	res := fmt.Sprintf(":%d", len(si.Data))
+	return res, nil
 }
 
 func GetSet(key, val string) (string, error) {
 	old, ok := storage[key]
 	if !ok {
-		return "", ErrorNotFound
+		i := &StringItem{
+			Data: val,
+			Type: TypeString,
+			TTL:  -1,
+		}
+		storage[key] = i
+		return "$-1", nil
 	}
 
 	resetTTL(key)
@@ -86,7 +98,9 @@ func GetSet(key, val string) (string, error) {
 		TTL:  -1,
 	}
 	storage[key] = new
-	return sold.Data, nil
+
+	res := fmt.Sprintf("$%d\r\n%s", len(sold.Data), sold.Data)
+	return res, nil
 }
 
 func Strlen(key string) (string, error) {
@@ -100,14 +114,21 @@ func Strlen(key string) (string, error) {
 		return "", ErrorWrongType
 	}
 
-	strlen := strconv.Itoa(len(si.Data))
-	return strlen, nil
+	res := fmt.Sprintf(":%d", len(si.Data))
+	return res, nil
 }
 
 func IncrBy(key string, by int) (string, error) {
 	i, ok := storage[key]
 	if !ok {
-		return "", ErrorNotFound
+		i := &StringItem{
+			Data: strconv.Itoa(by),
+			Type: TypeString,
+			TTL:  -1,
+		}
+		storage[key] = i
+		res := fmt.Sprintf(":%d", by)
+		return res, nil
 	}
 
 	si, ok := i.(*StringItem)
@@ -121,5 +142,6 @@ func IncrBy(key string, by int) (string, error) {
 	}
 
 	si.Data = strconv.Itoa(siInt + by)
-	return si.Data, nil
+	res := fmt.Sprintf(":%s", si.Data)
+	return res, nil
 }

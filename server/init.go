@@ -103,7 +103,7 @@ func handleConnection(c *client) {
 			continue
 		}
 
-		if command != "AUTH" && !c.isAuthorized {
+		if command != auth && !c.isAuthorized {
 			sendResult(errorNoAuth, c.w)
 			continue
 		}

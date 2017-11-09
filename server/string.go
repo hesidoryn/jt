@@ -7,19 +7,28 @@ import (
 	"github.com/hesidoryn/jt/storage"
 )
 
+const (
+	cmdSet    = "SET"
+	cmdGet    = "GET"
+	cmdAppend = "APPEND"
+	cmdGetSet = "GETSET"
+	cmdStrlen = "STRLEN"
+	cmdIncr   = "INCR"
+	cmdIncrBy = "INCRBY"
+)
+
 func initStringHandlers() {
-	handlers["SET"] = handlerSet
-	handlers["GET"] = handlerGet
-	handlers["APPEND"] = handlerAppend
-	handlers["GETSET"] = handlerGetSet
-	handlers["STRLEN"] = handlerStrlen
-	handlers["INCR"] = handlerIncr
-	handlers["INCRBY"] = handlerIncrBy
+	handlers[cmdSet] = handlerSet
+	handlers[cmdGet] = handlerGet
+	handlers[cmdAppend] = handlerAppend
+	handlers[cmdGetSet] = handlerGetSet
+	handlers[cmdStrlen] = handlerStrlen
+	handlers[cmdIncr] = handlerIncr
+	handlers[cmdIncrBy] = handlerIncrBy
 }
 
 func handlerSet(args [][]byte, c *client) {
 	if len(args) != 3 {
-		fmt.Println(4)
 		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
@@ -37,15 +46,13 @@ func handlerGet(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	val, err := storage.Get(key)
-	if err != nil {
-		sendResult("$-1", c.w)
+	res, err := storage.Get(key)
+	if err == storage.ErrorWrongType {
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf("$%d\n%s\n", len(val), val)
 	sendResult(res, c.w)
-	return
 }
 
 func handlerAppend(args [][]byte, c *client) {
@@ -56,13 +63,12 @@ func handlerAppend(args [][]byte, c *client) {
 
 	key := string(args[1])
 	append := string(args[2])
-	l, err := storage.Append(key, append)
+	res, err := storage.Append(key, append)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d", l)
 	sendResult(res, c.w)
 }
 
@@ -73,16 +79,13 @@ func handlerGetSet(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	oldVal, err := storage.Get(key)
-	if err != nil {
-		sendResult("$-1", c.w)
+	val := string(args[2])
+	res, err := storage.GetSet(key, val)
+	if err == storage.ErrorWrongType {
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	val := string(args[2])
-	storage.Set(key, val)
-
-	res := fmt.Sprintf("$%d\r\n%s\r\n", len(val), oldVal)
 	sendResult(res, c.w)
 }
 
@@ -93,17 +96,12 @@ func handlerStrlen(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	val, err := storage.Strlen(key)
-	if err == storage.ErrorNotFound {
-		sendResult(":0", c.w)
-		return
-	}
+	res, err := storage.Strlen(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d\r\n", len(val))
 	sendResult(res, c.w)
 }
 
@@ -114,13 +112,13 @@ func handlerIncr(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	val, err := storage.IncrBy(key, 1)
+	res, err := storage.IncrBy(key, 1)
 	if err == storage.ErrorIsNotInteger {
 		sendResult(errorIsNotInteger, c.w)
 		return
 	}
 
-	sendResult(fmt.Sprintf(":%s", val), c.w)
+	sendResult(res, c.w)
 }
 
 func handlerIncrBy(args [][]byte, c *client) {

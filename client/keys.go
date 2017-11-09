@@ -1,17 +1,19 @@
 package client
 
-import "fmt"
-
-func (c *JTClient) Exists(key string) (bool, error) {
-	command := fmt.Sprintf("EXISTS \"%s\"\n", key)
-	err := c.sendCommand(command)
+func (c *jtclient) Del(key string) (bool, error) {
+	res, err := c.sendCommand("DEL", key)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := c.readResponse()
+	return res.(int64) == 1, nil
+}
+
+func (c *jtclient) Exists(key string) (bool, error) {
+	res, err := c.sendCommand("EXISTS", key)
 	if err != nil {
 		return false, err
 	}
+
 	return res.(int64) == 1, nil
 }

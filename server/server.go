@@ -4,9 +4,14 @@ import (
 	"fmt"
 )
 
+const (
+	auth = "AUTH"
+	ping = "PING"
+)
+
 func initServerHandlers() {
-	handlers["AUTH"] = handlerAuth
-	handlers["PING"] = handlerPing
+	handlers[auth] = handlerAuth
+	handlers[ping] = handlerPing
 }
 
 func handlerAuth(args [][]byte, c *client) {

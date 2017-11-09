@@ -1,24 +1,15 @@
 package client
 
-import (
-	"bufio"
-	"fmt"
-)
-
-func (c *JTClient) Set(key, val string) error {
-	command := fmt.Sprintf("SET \"%s\" \"%s\"\n", key, val)
-	_, err := c.conn.Write([]byte(command))
-	if err != nil {
-		return err
-	}
-
-	scanner := bufio.NewScanner(c.conn)
-	for scanner.Scan() {
-		ln := scanner.Bytes()
-		if string(ln) == "+OK" {
-
-		}
-	}
-
+func (c *jtclient) Set(key, value string) error {
+	_, err := c.sendCommand("SET", key, value)
 	return err
+}
+
+func (c *jtclient) Get(key string) (string, error) {
+	res, err := c.sendCommand("GET", key)
+	if err != nil {
+		return "", err
+	}
+
+	return string(res.([]byte)), err
 }

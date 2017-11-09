@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-// JTClient is struct
-type JTClient struct {
+// jtclient is struct
+type jtclient struct {
 	config config
 	conn   net.Conn
 }
@@ -16,6 +16,21 @@ type JTClient struct {
 type config struct {
 	Host     string `json:"host"`
 	Password string `json:"password"`
+}
+
+// NewClient creates new jt client
+func NewClient(path string) (*jtclient, error) {
+	config := loadConfig(path)
+	conn, err := net.Dial("tcp", config.Host)
+	if err != nil {
+		return &jtclient{}, err
+	}
+
+	client := &jtclient{
+		config: config,
+		conn:   conn,
+	}
+	return client, nil
 }
 
 func loadConfig(path string) config {
@@ -33,21 +48,4 @@ func loadConfig(path string) config {
 		os.Exit(1)
 	}
 	return c
-}
-
-// NewClient creates new jt client.
-// It returns this client if success and
-// returns error if failed.
-func NewClient(path string) (*JTClient, error) {
-	config := loadConfig(path)
-	conn, err := net.Dial("tcp", config.Host)
-	if err != nil {
-		return &JTClient{}, err
-	}
-
-	client := &JTClient{
-		config: config,
-		conn:   conn,
-	}
-	return client, nil
 }

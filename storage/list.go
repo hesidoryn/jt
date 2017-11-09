@@ -23,7 +23,7 @@ func (i *ListItem) GetTTL() int {
 	return i.TTL
 }
 
-func LPush(key, val string) (int, error) {
+func LPush(key, val string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
 		li := &ListItem{
@@ -32,19 +32,20 @@ func LPush(key, val string) (int, error) {
 			TTL:  -1,
 		}
 		storage[key] = li
-		return 1, nil
+		return ":1", nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return ":0", ErrorWrongType
 	}
 
 	li.Data = append([]string{val}, li.Data...)
-	return len(li.Data), nil
+	res := fmt.Sprintf(":%d", len(li.Data))
+	return res, nil
 }
 
-func RPush(key, val string) (int, error) {
+func RPush(key, val string) (string, error) {
 	i, ok := storage[key]
 	if !ok {
 		li := &ListItem{
@@ -53,16 +54,17 @@ func RPush(key, val string) (int, error) {
 			TTL:  -1,
 		}
 		storage[key] = li
-		return 1, nil
+		return ":1", nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return 0, ErrorWrongType
+		return ":0", ErrorWrongType
 	}
 
 	li.Data = append(li.Data, val)
-	return len(li.Data), nil
+	res := fmt.Sprintf(":%d", len(li.Data))
+	return res, nil
 }
 
 func LPop(key string) (string, error) {

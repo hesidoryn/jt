@@ -3,24 +3,34 @@ package client
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strconv"
 	"strings"
 )
 
-func (c *JTClient) sendCommand(command string) error {
+func (c *jtclient) sendCommand(cmd string, args ...string) (interface{}, error) {
+	command := cmd
+	for _, arg := range args {
+		command += fmt.Sprintf(" \"%s\"", arg)
+	}
+	command += "\n"
+
 	_, err := c.conn.Write([]byte(command))
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return c.readResponse()
 }
 
-func (c *JTClient) readResponse() (interface{}, error) {
+func (c *jtclient) readResponse() (interface{}, error) {
 	reader := bufio.NewReader(c.conn)
 
 	var line string
 	var err error
 
-	//read until the first non-whitespace line
 	for {
 		line, err = reader.ReadString('\n')
 		if len(line) == 0 || err != nil {
@@ -66,7 +76,6 @@ func (c *JTClient) readResponse() (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			// dont read end of line as might not have been bulk
 		}
 		return res, nil
 	}
@@ -98,7 +107,6 @@ func readBulk(reader *bufio.Reader, head string) ([]byte, error) {
 		lr := io.LimitReader(reader, int64(size))
 		data, err = ioutil.ReadAll(lr)
 		if err == nil {
-			// read end of line
 			_, err = reader.ReadString('\n')
 		}
 	default:

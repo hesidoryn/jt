@@ -7,31 +7,42 @@ import (
 	"github.com/hesidoryn/jt/storage"
 )
 
+const (
+	cmdDel     = "DEL"
+	cmdRename  = "RENAME"
+	cmdTTL     = "TTL"
+	cmdPersist = "PERSIST"
+	cmdExpire  = "EXPIRE"
+	cmdType    = "TYPE"
+	cmdKeys    = "KEYS"
+	cmdExists  = "EXISTS"
+)
+
 func initKeysHandlers() {
-	handlers["DEL"] = handlerDelete
-	handlers["RENAME"] = handlerRename
-	handlers["TTL"] = handlerTTL
-	handlers["PERSIST"] = handlerPersist
-	handlers["EXPIRE"] = handlerExpire
-	handlers["TYPE"] = handlerType
-	handlers["KEYS"] = handlerKeys
-	handlers["EXISTS"] = handlerExists
+	handlers[cmdDel] = handlerDel
+	handlers[cmdRename] = handlerRename
+	handlers[cmdTTL] = handlerTTL
+	handlers[cmdPersist] = handlerPersist
+	handlers[cmdExpire] = handlerExpire
+	handlers[cmdType] = handlerType
+	handlers[cmdKeys] = handlerKeys
+	handlers[cmdExists] = handlerExists
 }
 
-func handlerDelete(args [][]byte, c *client) {
+func handlerDel(args [][]byte, c *client) {
 	if len(args) != 2 {
 		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
 	key := string(args[1])
-	err := storage.Delete(key)
+	res, err := storage.Delete(key)
 	if err != nil {
-		sendResult(":0", c.w)
+		sendResult(res, c.w)
 		return
 	}
 
-	sendResult(":1", c.w)
+	sendResult(res, c.w)
 }
 
 func handlerRename(args [][]byte, c *client) {
@@ -58,9 +69,8 @@ func handlerTTL(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	ttl := storage.GetTTL(key)
+	res := storage.GetTTL(key)
 
-	res := fmt.Sprintf(":%d", ttl)
 	sendResult(res, c.w)
 }
 
@@ -72,6 +82,7 @@ func handlerPersist(args [][]byte, c *client) {
 
 	key := string(args[1])
 	res := storage.Persist(key)
+
 	sendResult(res, c.w)
 }
 
@@ -88,13 +99,9 @@ func handlerExpire(args [][]byte, c *client) {
 		return
 	}
 
-	err = storage.SetExpiration(key, ttl)
-	if err != nil {
-		sendResult(":0", c.w)
-		return
-	}
+	res := storage.SetExpiration(key, ttl)
 
-	sendResult(":1", c.w)
+	sendResult(res, c.w)
 }
 
 func handlerType(args [][]byte, c *client) {
@@ -105,6 +112,7 @@ func handlerType(args [][]byte, c *client) {
 
 	key := string(args[1])
 	res := storage.GetType(key)
+
 	sendResult(res, c.w)
 }
 
@@ -116,6 +124,7 @@ func handlerKeys(args [][]byte, c *client) {
 
 	search := string(args[1])
 	res := storage.Keys(search)
+
 	sendResult(res, c.w)
 }
 
@@ -130,5 +139,6 @@ func handlerExists(args [][]byte, c *client) {
 		keys = append(keys, string(args[i]))
 	}
 	res := storage.Exists(keys)
+
 	sendResult(res, c.w)
 }

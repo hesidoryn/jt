@@ -6,15 +6,15 @@ import (
 	"strings"
 )
 
-func Delete(key string) error {
+func Delete(key string) (string, error) {
 	_, ok := storage[key]
 	if !ok {
-		return ErrorNotFound
+		return ":0", ErrorNotFound
 	}
 
 	resetTTL(key)
 	delete(storage, key)
-	return nil
+	return ":1", nil
 }
 
 func Rename(key, newKey string) error {
@@ -45,24 +45,25 @@ func Persist(key string) string {
 	return ":0"
 }
 
-func SetExpiration(key string, ttl int) error {
+func SetExpiration(key string, ttl int) string {
 	i, ok := storage[key]
 	if !ok {
-		return ErrorNotFound
+		return ":0"
 	}
 
 	i.SetTTL(ttl)
 	setNewTTL(key)
-	return nil
+	return ":1"
 }
 
-func GetTTL(key string) int {
+func GetTTL(key string) string {
 	i, ok := storage[key]
 	if !ok {
-		return -2
+		return ":-2"
 	}
 
-	return i.GetTTL()
+	res := fmt.Sprintf(":%d", i.GetTTL())
+	return res
 }
 
 func GetType(key string) string {

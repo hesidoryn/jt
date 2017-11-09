@@ -7,15 +7,25 @@ import (
 	"github.com/hesidoryn/jt/storage"
 )
 
+const (
+	cmdDSet         = "DSET"
+	cmdDGet         = "DGET"
+	cmdDDel         = "DDEL"
+	cmdDExists      = "DEXISTS"
+	cmdDLen         = "DLEN"
+	cmdDIncrBy      = "DINCRBY"
+	cmdDIncrByFloat = "DINCRBYFLOAT"
+)
+
 // initDictHandlers inits handlers for dict values
 func initDictHandlers() {
-	handlers["DSET"] = handlerDSet
-	handlers["DGET"] = handlerDGet
-	handlers["DDEL"] = handlerDDel
-	handlers["DEXISTS"] = handlerDExists
-	handlers["DLEN"] = handlerDLen
-	handlers["DINCRBY"] = handlerDIncrBy
-	handlers["DINCRBYFLOAT"] = handlerDIncrByFloat
+	handlers[cmdDSet] = handlerDSet
+	handlers[cmdDGet] = handlerDGet
+	handlers[cmdDDel] = handlerDDel
+	handlers[cmdDExists] = handlerDExists
+	handlers[cmdDLen] = handlerDLen
+	handlers[cmdDIncrBy] = handlerDIncrBy
+	handlers[cmdDIncrByFloat] = handlerDIncrByFloat
 }
 
 // handlerDSet is used for setting dict fields
@@ -69,13 +79,12 @@ func handlerDDel(args [][]byte, c *client) {
 
 	key := string(args[1])
 	field := string(args[2])
-	r, err := storage.DDel(key, field)
+	res, err := storage.DDel(key, field)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d", r)
 	sendResult(res, c.w)
 }
 
@@ -87,13 +96,12 @@ func handlerDExists(args [][]byte, c *client) {
 
 	key := string(args[1])
 	field := string(args[2])
-	r, err := storage.DExists(key, field)
+	res, err := storage.DExists(key, field)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d", r)
 	sendResult(res, c.w)
 }
 
@@ -104,13 +112,12 @@ func handlerDLen(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	r, err := storage.DLen(key)
+	res, err := storage.DLen(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d", r)
 	sendResult(res, c.w)
 }
 
@@ -128,13 +135,12 @@ func handlerDIncrBy(args [][]byte, c *client) {
 		return
 	}
 
-	r, err := storage.DIncrBy(key, field, by)
+	res, err := storage.DIncrBy(key, field, by)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := fmt.Sprintf(":%d", r)
 	sendResult(res, c.w)
 }
 
@@ -152,12 +158,11 @@ func handlerDIncrByFloat(args [][]byte, c *client) {
 		return
 	}
 
-	r, err := storage.DIncrByFloat(key, field, by)
+	res, err := storage.DIncrByFloat(key, field, by)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	res := strconv.FormatFloat(r, 'f', -1, 64)
 	sendResult(res, c.w)
 }

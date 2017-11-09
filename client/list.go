@@ -1,18 +1,11 @@
 package client
 
-import "fmt"
-
-func (c *JTClient) Rpush(key string, val string) error {
-	command := fmt.Sprintf("RPUSH \"%s\" \"%s\"\n", key, val)
-	err := c.sendCommand(command)
+func (c *jtclient) Rpush(key string, val string) error {
+	_, err := c.sendCommand("RPUSH", key, val)
 	if err != nil {
 		return err
 	}
 
-	_, err = c.readResponse()
-	if err != nil {
-		return err
-	}
+	return err
 
-	return nil
 }
