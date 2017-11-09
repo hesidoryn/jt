@@ -7,10 +7,9 @@ import (
 )
 
 type DictItem struct {
-	Data         map[string]string
-	TTL          int
-	Type         string
-	isPersistent int
+	Data map[string]string
+	TTL  int
+	Type string
 }
 
 func (i *DictItem) GetType() string {
@@ -23,14 +22,6 @@ func (i *DictItem) SetTTL(ttl int) {
 
 func (i *DictItem) GetTTL() int {
 	return i.TTL
-}
-
-func (i *DictItem) SetPersistence() {
-	i.isPersistent = 1
-}
-
-func (i *DictItem) GetPersistence() int {
-	return i.isPersistent
 }
 
 func DSet(key string, vals map[string]string) error {

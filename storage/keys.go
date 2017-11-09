@@ -45,6 +45,17 @@ func Persist(key string) string {
 	return ":0"
 }
 
+func SetExpiration(key string, ttl int) error {
+	i, ok := storage[key]
+	if !ok {
+		return ErrorNotFound
+	}
+
+	i.SetTTL(ttl)
+	setNewTTL(key)
+	return nil
+}
+
 func GetTTL(key string) int {
 	i, ok := storage[key]
 	if !ok {

@@ -3,10 +3,9 @@ package storage
 import "strconv"
 
 type StringItem struct {
-	Data         string
-	TTL          int
-	Type         string
-	isPersistent int
+	Data string
+	TTL  int
+	Type string
 }
 
 func (i *StringItem) GetType() string {
@@ -19,14 +18,6 @@ func (i *StringItem) SetTTL(ttl int) {
 
 func (i *StringItem) GetTTL() int {
 	return i.TTL
-}
-
-func (i *StringItem) SetPersistence() {
-	i.isPersistent = 1
-}
-
-func (i *StringItem) GetPersistence() int {
-	return i.isPersistent
 }
 
 func Set(key, val string) {

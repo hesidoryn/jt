@@ -12,8 +12,6 @@ type Item interface {
 	GetType() string
 	SetTTL(int)
 	GetTTL() int
-	SetPersistence()
-	GetPersistence() int
 }
 
 var (

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bufio"
 	"fmt"
 	"strconv"
 
@@ -18,9 +17,9 @@ func initDictHandlers() {
 	handlers["DINCRBYFLOAT"] = handlerDIncrByFloat
 }
 
-func handlerDSet(args [][]byte, w *bufio.Writer) {
+func handlerDSet(args [][]byte, c *client) {
 	if len(args) < 4 || len(args)%2 != 0 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -33,16 +32,16 @@ func handlerDSet(args [][]byte, w *bufio.Writer) {
 	}
 	err := storage.DSet(key, vals)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	sendResult(resultOK, w)
+	sendResult(resultOK, c.w)
 }
 
-func handlerDGet(args [][]byte, w *bufio.Writer) {
+func handlerDGet(args [][]byte, c *client) {
 	if len(args) < 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -53,16 +52,16 @@ func handlerDGet(args [][]byte, w *bufio.Writer) {
 	}
 	res, err := storage.DGet(key, fields)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
-	sendResult(res, w)
+	sendResult(res, c.w)
 }
 
-func handlerDDel(args [][]byte, w *bufio.Writer) {
+func handlerDDel(args [][]byte, c *client) {
 	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -70,17 +69,17 @@ func handlerDDel(args [][]byte, w *bufio.Writer) {
 	field := string(args[2])
 	r, err := storage.DDel(key, field)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
 	res := fmt.Sprintf(":%d", r)
-	sendResult(res, w)
+	sendResult(res, c.w)
 }
 
-func handlerDExists(args [][]byte, w *bufio.Writer) {
+func handlerDExists(args [][]byte, c *client) {
 	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -88,34 +87,34 @@ func handlerDExists(args [][]byte, w *bufio.Writer) {
 	field := string(args[2])
 	r, err := storage.DExists(key, field)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
 	res := fmt.Sprintf(":%d", r)
-	sendResult(res, w)
+	sendResult(res, c.w)
 }
 
-func handlerDLen(args [][]byte, w *bufio.Writer) {
+func handlerDLen(args [][]byte, c *client) {
 	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
 	key := string(args[1])
 	r, err := storage.DLen(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
 	res := fmt.Sprintf(":%d", r)
-	sendResult(res, w)
+	sendResult(res, c.w)
 }
 
-func handlerDIncrBy(args [][]byte, w *bufio.Writer) {
+func handlerDIncrBy(args [][]byte, c *client) {
 	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -123,23 +122,23 @@ func handlerDIncrBy(args [][]byte, w *bufio.Writer) {
 	field := string(args[2])
 	by, err := strconv.Atoi(string(args[3]))
 	if err != nil {
-		sendResult(errorIsNotInteger, w)
+		sendResult(errorIsNotInteger, c.w)
 		return
 	}
 
 	r, err := storage.DIncrBy(key, field, by)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
 	res := fmt.Sprintf(":%d", r)
-	sendResult(res, w)
+	sendResult(res, c.w)
 }
 
-func handlerDIncrByFloat(args [][]byte, w *bufio.Writer) {
+func handlerDIncrByFloat(args [][]byte, c *client) {
 	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), w)
+		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
 		return
 	}
 
@@ -147,16 +146,16 @@ func handlerDIncrByFloat(args [][]byte, w *bufio.Writer) {
 	field := string(args[2])
 	by, err := strconv.ParseFloat(string(args[3]), 64)
 	if err != nil {
-		sendResult(errorIsNotFloat, w)
+		sendResult(errorIsNotFloat, c.w)
 		return
 	}
 
 	r, err := storage.DIncrByFloat(key, field, by)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, w)
+		sendResult(errorWrongType, c.w)
 		return
 	}
 
 	res := strconv.FormatFloat(r, 'f', -1, 64)
-	sendResult(res, w)
+	sendResult(res, c.w)
 }

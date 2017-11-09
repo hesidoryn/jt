@@ -8,17 +8,6 @@ import (
 
 var ttlMap = map[string]chan bool{}
 
-func SetExpiration(key string, ttl int) error {
-	i, ok := storage[key]
-	if !ok {
-		return ErrorNotFound
-	}
-
-	i.SetTTL(ttl)
-	setNewTTL(key)
-	return nil
-}
-
 func newTicker(key string) chan bool {
 	done := make(chan bool, 1)
 	ticker := time.NewTicker(time.Second * 1)

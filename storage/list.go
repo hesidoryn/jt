@@ -6,10 +6,9 @@ import (
 )
 
 type ListItem struct {
-	Data         []string
-	TTL          int
-	Type         string
-	isPersistent int
+	Data []string
+	TTL  int
+	Type string
 }
 
 func (i *ListItem) GetType() string {
@@ -22,14 +21,6 @@ func (i *ListItem) SetTTL(ttl int) {
 
 func (i *ListItem) GetTTL() int {
 	return i.TTL
-}
-
-func (i *ListItem) SetPersistence() {
-	i.isPersistent = 1
-}
-
-func (i *ListItem) GetPersistence() int {
-	return i.isPersistent
 }
 
 func LPush(key, val string) (int, error) {
