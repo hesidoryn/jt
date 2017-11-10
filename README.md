@@ -1,12 +1,12 @@
 # JT
 
 ## Installation
-[here](https://github.com/hesidoryn/jt)
+[here](https://github.com/hesidoryn/jt/blob/master/DEPLOYMENT.md)
 
 ## Quickstart
 ```go
 func SomeExamples() {
-	client, err := jtclient.NewClient("config.json")
+	client, err := jtclient.NewClient("client-config.json")
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -26,6 +26,12 @@ func SomeExamples() {
 	log.Println(resGet)
 }
 ```
+
+## Examples
+[here](https://github.com/hesidoryn/jt/tree/master/_examples)
+
+## Some documentation
+[here](https://godoc.org/github.com/hesidoryn/jt)
 
 ## Commands list
 1. SET
@@ -63,4 +69,4 @@ func SomeExamples() {
 33. SAVE
 
 ## Benchmarks
-[here](https://github.com/hesidoryn/jt)
+[here](https://github.com/hesidoryn/jt/blob/master/BENCHMARKS.md)

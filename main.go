@@ -1,5 +1,6 @@
-// Package jt is a redis-like in-memory database
-// It contains server and client parts
+// JT is a Redis-like in-memory database.
+//
+// It contains server and client parts.
 //
 // By Heorhi Sidoryn
 package main
