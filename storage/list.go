@@ -5,20 +5,25 @@ import (
 	"strings"
 )
 
+// ListItem is struct that contains list.
+// It implements Item interface.
 type ListItem struct {
 	Data []string
 	TTL  int
 	Type string
 }
 
+// GetType returns "+list" for ListItem
 func (i *ListItem) GetType() string {
 	return i.Type
 }
 
+// SetTTL sets time to live value for list item
 func (i *ListItem) SetTTL(ttl int) {
 	i.TTL = ttl
 }
 
+// GetTTL returns time to live value for list item
 func (i *ListItem) GetTTL() int {
 	return i.TTL
 }
@@ -40,7 +45,9 @@ func LPush(key, val string) (string, error) {
 		return ":0", ErrorWrongType
 	}
 
-	li.Data = append([]string{val}, li.Data...)
+	li.Data = append(li.Data, val)
+	li.Data[0], li.Data[len(li.Data)-1] = li.Data[len(li.Data)-1], li.Data[0]
+
 	res := fmt.Sprintf(":%d", len(li.Data))
 	return res, nil
 }

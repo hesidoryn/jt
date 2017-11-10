@@ -5,6 +5,8 @@ import (
 	"strconv"
 )
 
+// StringItem is struct that contains string item.
+// It imlements Item interface.
 type StringItem struct {
 	Data string
 	TTL  int
@@ -24,7 +26,7 @@ func (i *StringItem) GetTTL() int {
 }
 
 func Set(key, val string) {
-	resetTTL(key)
+	stopTTLChecker(key)
 
 	i := &StringItem{
 		Data: val,
@@ -84,7 +86,7 @@ func GetSet(key, val string) (string, error) {
 		return "$-1", nil
 	}
 
-	resetTTL(key)
+	stopTTLChecker(key)
 
 	if old.GetType() != typeString {
 		return "", ErrorWrongType

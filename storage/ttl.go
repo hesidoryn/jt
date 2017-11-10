@@ -1,22 +1,18 @@
 package storage
 
 import (
-	"fmt"
-	"math/rand"
 	"time"
 )
 
-var ttlMap = map[string]chan bool{}
+var ttlCheckers = map[string]chan bool{}
 
 func newTicker(key string) chan bool {
 	done := make(chan bool, 1)
 	ticker := time.NewTicker(time.Second * 1)
 	go func() {
-		i := rand.Intn(10)
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println(i)
 				ttl := storage[key].GetTTL()
 				if ttl > 0 {
 					storage[key].SetTTL(ttl - 1)
@@ -25,7 +21,7 @@ func newTicker(key string) chan bool {
 
 				if ttl == 0 {
 					ticker.Stop()
-					delete(ttlMap, key)
+					delete(ttlCheckers, key)
 					delete(storage, key)
 					return
 				}
@@ -38,16 +34,16 @@ func newTicker(key string) chan bool {
 	return done
 }
 
-func setNewTTL(key string) {
-	ttlMap[key] = newTicker(key)
+func startTTLChecker(key string) {
+	ttlCheckers[key] = newTicker(key)
 }
 
-func resetTTL(key string) {
-	done, ok := ttlMap[key]
+func stopTTLChecker(key string) {
+	done, ok := ttlCheckers[key]
 	if !ok {
 		return
 	}
 
 	done <- true
-	delete(ttlMap, key)
+	delete(ttlCheckers, key)
 }

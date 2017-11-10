@@ -99,7 +99,7 @@ func handlerExpire(args [][]byte, c *client) {
 		return
 	}
 
-	res := storage.SetExpiration(key, ttl)
+	res := storage.Expire(key, ttl)
 
 	sendResult(res, c.w)
 }

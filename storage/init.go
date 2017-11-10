@@ -6,7 +6,7 @@
 //
 // Protocol is redis compatible except dicts.
 //
-// >30 commands are realised.
+// 30+ commands are realised.
 //
 // Persistence is realised using boltdb and provides by SAVE command.
 //

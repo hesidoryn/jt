@@ -54,7 +54,7 @@ func Init(config config.Config) {
 		log.Fatalf("Socket listen port %s failed,%s", config.Port, err)
 		os.Exit(1)
 	}
-	log.Printf("Begin listen port: %s", config.Port)
+	log.Printf("JT begins listen port: %s", config.Port)
 
 	for {
 		conn, err := listen.Accept()

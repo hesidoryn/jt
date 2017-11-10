@@ -1,19 +1,19 @@
 package jtclient
 
-import (
-	"bytes"
-	"fmt"
-	"io"
-)
-
+// Auth sends auth command
 func (c *Client) Auth() error {
-	command := fmt.Sprintf("AUTH \"%s\"\n", c.config.Password)
-	_, err := c.conn.Write([]byte(command))
-	if err != nil {
-		return err
-	}
+	_, err := c.sendCommand("AUTH", c.config.Password)
+	return err
+}
 
-	buf := bytes.Buffer{}
-	_, err = io.Copy(&buf, c.conn)
+// Ping sends ping command
+func (c *Client) Ping() error {
+	_, err := c.sendCommand("PING")
+	return err
+}
+
+// Save sends save command
+func (c *Client) Save() error {
+	_, err := c.sendCommand("SAVE")
 	return err
 }

@@ -25,10 +25,10 @@ func NewClient(path string) (*Client, error) {
 	config := loadConfig(path)
 	conn, err := net.Dial("tcp", config.Host)
 	if err != nil {
-		return &client{}, err
+		return &Client{}, err
 	}
 
-	c := &client{
+	c := &Client{
 		config: config,
 		conn:   conn,
 	}

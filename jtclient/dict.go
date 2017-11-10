@@ -16,8 +16,19 @@ func (c *Client) DSet(key string, dict map[string]string) error {
 }
 
 // DGet is used to get dict's fields
-func (c *Client) DGet(key string, args ...string) (string, error) {
+func (c *Client) DGet(key string, args ...string) ([]string, error) {
+	result := []string{}
+
 	args = append([]string{key}, args...)
 	res, err := c.sendCommand("DGET", args...)
-	return string(res.([]byte)), err
+	if err != nil {
+		return result, err
+	}
+
+	ires := res.([][]byte)
+	for _, ir := range ires {
+		result = append(result, string(ir))
+	}
+
+	return result, err
 }

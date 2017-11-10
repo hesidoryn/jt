@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/boltdb/bolt"
 )
 
 var storage = map[string]Item{}
 
+// Item is interface that wraps GetType, SetTTL, GetTTL methods
 type Item interface {
 	GetType() string
 	SetTTL(int)
@@ -106,18 +106,4 @@ func save(key string, v Item, b *bolt.Bucket, wg *sync.WaitGroup) {
 		log.Println(err)
 		return
 	}
-}
-
-func GetStorage() {
-	ticker := time.NewTicker(time.Second * 3)
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				for _, v := range storage {
-					log.Println(v)
-				}
-			}
-		}
-	}()
 }

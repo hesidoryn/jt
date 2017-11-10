@@ -13,7 +13,7 @@ func Delete(key string) (string, error) {
 		return ":0", nil
 	}
 
-	resetTTL(key)
+	stopTTLChecker(key)
 	delete(storage, key)
 	return ":1", nil
 }
@@ -24,10 +24,12 @@ func Rename(key, newKey string) error {
 		return errors.New("no such key")
 	}
 
-	resetTTL(key)
+	stopTTLChecker(key)
+
 	delete(storage, key)
 	storage[newKey] = i
-	ttlMap[newKey] = newTicker(newKey)
+
+	startTTLChecker(newKey)
 	return nil
 }
 
@@ -38,7 +40,7 @@ func Persist(key string) string {
 	}
 
 	if i.GetTTL() != -1 {
-		resetTTL(key)
+		stopTTLChecker(key)
 		i.SetTTL(-1)
 		return ":1"
 	}
@@ -46,14 +48,14 @@ func Persist(key string) string {
 	return ":0"
 }
 
-func SetExpiration(key string, ttl int) string {
+func Expire(key string, ttl int) string {
 	i, ok := storage[key]
 	if !ok {
 		return ":0"
 	}
 
 	i.SetTTL(ttl)
-	setNewTTL(key)
+	startTTLChecker(key)
 	return ":1"
 }
 
