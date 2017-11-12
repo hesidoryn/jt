@@ -33,6 +33,9 @@ func SomeExamples() {
 ## Some documentation
 [here](https://godoc.org/github.com/hesidoryn/jt)
 
+## Some tests
+[here](https://github.com/hesidoryn/jt/tree/master/storage)
+
 ## Commands list
 1. SET
 2. GET
