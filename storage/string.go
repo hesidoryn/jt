@@ -88,11 +88,10 @@ func GetSet(key, val string) (string, error) {
 
 	stopTTLChecker(key)
 
-	if old.GetType() != typeString {
-		return "", ErrorWrongType
+	sold, ok := old.(*StringItem)
+	if !ok {
+		return "$-1", ErrorWrongType
 	}
-
-	sold := old.(*StringItem)
 
 	new := &StringItem{
 		Data: val,
@@ -113,7 +112,7 @@ func Strlen(key string) (string, error) {
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "", ErrorWrongType
+		return "-1", ErrorWrongType
 	}
 
 	res := fmt.Sprintf(":%d", len(si.Data))

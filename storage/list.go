@@ -82,15 +82,15 @@ func LPop(key string) (string, error) {
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return "", ErrorWrongType
+		return "$-1", ErrorWrongType
 	}
 
 	if len(li.Data) == 0 {
 		return "$-1", nil
 	}
 
-	pop := li.Data[0]
-	li.Data = li.Data[1:]
+	var pop string
+	pop, li.Data = li.Data[0], li.Data[1:]
 	res := fmt.Sprintf("$%d\r\n%s", len(pop), pop)
 	return res, nil
 }
