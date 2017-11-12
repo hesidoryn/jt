@@ -135,12 +135,12 @@ func IncrBy(key string, by int) (string, error) {
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "", ErrorWrongType
+		return ":0", ErrorWrongType
 	}
 
 	siInt, err := strconv.Atoi(si.Data)
 	if err != nil {
-		return "", ErrorIsNotInteger
+		return ":0", ErrorIsNotInteger
 	}
 
 	si.Data = strconv.Itoa(siInt + by)
