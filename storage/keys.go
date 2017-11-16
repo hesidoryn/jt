@@ -8,6 +8,9 @@ import (
 )
 
 func Delete(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	_, ok := storage[key]
 	if !ok {
 		return ":0", nil
@@ -19,6 +22,9 @@ func Delete(key string) (string, error) {
 }
 
 func Rename(key, newKey string) error {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return errors.New("no such key")
@@ -34,6 +40,9 @@ func Rename(key, newKey string) error {
 }
 
 func Persist(key string) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":0"
@@ -49,6 +58,9 @@ func Persist(key string) string {
 }
 
 func Expire(key string, ttl int) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":0"
@@ -60,6 +72,9 @@ func Expire(key string, ttl int) string {
 }
 
 func GetTTL(key string) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":-2"
@@ -70,6 +85,9 @@ func GetTTL(key string) string {
 }
 
 func GetType(key string) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return typeNone
@@ -79,6 +97,9 @@ func GetType(key string) string {
 }
 
 func Keys(pattern string) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	res := []string{}
 	for key := range storage {
 		ok, err := path.Match(pattern, key)
@@ -102,6 +123,9 @@ func Keys(pattern string) string {
 }
 
 func Exists(keys []string) string {
+	locker.Lock()
+	defer locker.Unlock()
+
 	count := 0
 	for i := range keys {
 		_, ok := storage[keys[i]]

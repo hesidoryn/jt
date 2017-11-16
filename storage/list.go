@@ -29,6 +29,9 @@ func (i *ListItem) GetTTL() int {
 }
 
 func LPush(key, val string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		li := &ListItem{
@@ -53,6 +56,9 @@ func LPush(key, val string) (string, error) {
 }
 
 func RPush(key, val string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		li := &ListItem{
@@ -75,6 +81,9 @@ func RPush(key, val string) (string, error) {
 }
 
 func LPop(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return "$-1", nil
@@ -96,6 +105,9 @@ func LPop(key string) (string, error) {
 }
 
 func RPop(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return "$-1", nil
@@ -117,6 +129,9 @@ func RPop(key string) (string, error) {
 }
 
 func LRem(key string, count int, val string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":0", nil
@@ -173,6 +188,9 @@ func LRem(key string, count int, val string) (string, error) {
 }
 
 func LIndex(key string, index int) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":0", nil
@@ -198,6 +216,9 @@ func LIndex(key string, index int) (string, error) {
 }
 
 func LRange(key string, start, end int) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return "*0", nil
@@ -241,6 +262,9 @@ func LRange(key string, start, end int) (string, error) {
 }
 
 func LLen(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return ":0", nil

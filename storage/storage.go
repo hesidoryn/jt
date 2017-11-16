@@ -10,6 +10,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+var locker = &sync.Mutex{}
 var storage = map[string]Item{}
 
 // Item is interface that wraps GetType, SetTTL, GetTTL methods

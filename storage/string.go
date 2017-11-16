@@ -26,6 +26,9 @@ func (i *StringItem) GetTTL() int {
 }
 
 func Set(key, val string) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	stopTTLChecker(key)
 
 	i := &StringItem{
@@ -37,6 +40,9 @@ func Set(key, val string) {
 }
 
 func Get(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return "$-1", nil
@@ -52,6 +58,9 @@ func Get(key string) (string, error) {
 }
 
 func Append(key, val string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		i = &StringItem{
@@ -75,6 +84,9 @@ func Append(key, val string) (string, error) {
 }
 
 func GetSet(key, val string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	old, ok := storage[key]
 	if !ok {
 		i := &StringItem{
@@ -105,6 +117,9 @@ func GetSet(key, val string) (string, error) {
 }
 
 func Strlen(key string) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		return "-1", nil
@@ -120,6 +135,9 @@ func Strlen(key string) (string, error) {
 }
 
 func IncrBy(key string, by int) (string, error) {
+	locker.Lock()
+	defer locker.Unlock()
+
 	i, ok := storage[key]
 	if !ok {
 		i := &StringItem{
