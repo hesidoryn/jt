@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+
+	"github.com/hesidoryn/jt/config"
 )
 
 func TestGet(t *testing.T) {
+	s := Init(config.Config{})
 	key := "get"
 	// get key doesn't exist in storage
-	res, err := Get(key)
+	res, err := s.Get(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -18,8 +21,8 @@ func TestGet(t *testing.T) {
 	}
 
 	// test key isn't StringItem
-	storage["get"] = &ListItem{}
-	res, err = Get(key)
+	s.data["get"] = &ListItem{}
+	res, err = s.Get(key)
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
@@ -30,10 +33,10 @@ func TestGet(t *testing.T) {
 	// test key is StringItem
 	testData := "data"
 	expected := fmt.Sprintf("$%d\r\n%s", len(testData), testData)
-	storage[key] = &StringItem{
+	s.data[key] = &StringItem{
 		Data: testData,
 	}
-	res, err = Get(key)
+	res, err = s.Get(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -43,12 +46,13 @@ func TestGet(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
+	s := Init(config.Config{})
 	key := "append"
 	testData := " World!"
 
 	// test key doesn't exist in storage
 	expected1 := fmt.Sprintf(":%d", len(testData))
-	res, err := Append(key, testData)
+	res, err := s.Append(key, testData)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -57,8 +61,8 @@ func TestAppend(t *testing.T) {
 	}
 
 	// test key isn't StringItem
-	storage[key] = &ListItem{}
-	res, err = Append(key, "")
+	s.data[key] = &ListItem{}
+	res, err = s.Append(key, "")
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
@@ -68,10 +72,10 @@ func TestAppend(t *testing.T) {
 
 	// test key is StringItem
 	si := &StringItem{Data: "Hello"}
-	storage[key] = si
+	s.data[key] = si
 	expected2 := fmt.Sprintf(":%d", len(si.Data)+len(testData))
 
-	res, err = Append(key, testData)
+	res, err = s.Append(key, testData)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -81,11 +85,12 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGetSet(t *testing.T) {
+	s := Init(config.Config{})
 	key := "getset"
 	testData := " World!"
 
 	// test key doesn't exist in storage
-	res, err := GetSet(key, testData)
+	res, err := s.GetSet(key, testData)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -94,8 +99,8 @@ func TestGetSet(t *testing.T) {
 	}
 
 	// test key isn't StringItem
-	storage[key] = &ListItem{}
-	res, err = GetSet(key, "")
+	s.data[key] = &ListItem{}
+	res, err = s.GetSet(key, "")
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
@@ -106,10 +111,10 @@ func TestGetSet(t *testing.T) {
 	// test key is StringItem
 	oldData := "hello"
 	si := &StringItem{Data: oldData}
-	storage[key] = si
+	s.data[key] = si
 	expected := fmt.Sprintf("$%d\r\n%s", len(oldData), oldData)
 
-	res, err = GetSet(key, testData)
+	res, err = s.GetSet(key, testData)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -119,11 +124,12 @@ func TestGetSet(t *testing.T) {
 }
 
 func TestStrlen(t *testing.T) {
+	s := Init(config.Config{})
 	key := "strlen"
 	testData := " World!"
 
 	// test key doesn't exist in storage
-	res, err := Strlen(key)
+	res, err := s.Strlen(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -132,8 +138,8 @@ func TestStrlen(t *testing.T) {
 	}
 
 	// test key isn't StringItem
-	storage[key] = &ListItem{}
-	res, err = Strlen(key)
+	s.data[key] = &ListItem{}
+	res, err = s.Strlen(key)
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
@@ -143,10 +149,10 @@ func TestStrlen(t *testing.T) {
 
 	// test key is StringItem
 	si := &StringItem{Data: testData}
-	storage[key] = si
+	s.data[key] = si
 	expected := fmt.Sprintf(":%d", len(testData))
 
-	res, err = Strlen(key)
+	res, err = s.Strlen(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -156,12 +162,13 @@ func TestStrlen(t *testing.T) {
 }
 
 func TestIncrBy(t *testing.T) {
+	s := Init(config.Config{})
 	key := "incrby"
 	by := 5
 
 	// test key doesn't exist in storage
 	expected1 := fmt.Sprintf(":%d", by)
-	res, err := IncrBy(key, by)
+	res, err := s.IncrBy(key, by)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
@@ -170,8 +177,8 @@ func TestIncrBy(t *testing.T) {
 	}
 
 	// test key isn't StringItem
-	storage[key] = &ListItem{}
-	res, err = IncrBy(key, by)
+	s.data[key] = &ListItem{}
+	res, err = s.IncrBy(key, by)
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
@@ -180,8 +187,8 @@ func TestIncrBy(t *testing.T) {
 	}
 
 	// test item isn't integer
-	storage[key] = &StringItem{Data: "sadasd"}
-	res, err = IncrBy(key, by)
+	s.data[key] = &StringItem{Data: "sadasd"}
+	res, err = s.IncrBy(key, by)
 	if err != ErrorIsNotInteger {
 		t.Error("Expected ErrorIsNotInteger, got ", err)
 	}
@@ -192,10 +199,10 @@ func TestIncrBy(t *testing.T) {
 	// test item is integer
 	siData := 10
 	si := &StringItem{Data: strconv.Itoa(siData)}
-	storage[key] = si
+	s.data[key] = si
 	expected2 := fmt.Sprintf(":%d", siData+by)
 
-	res, err = IncrBy(key, by)
+	res, err = s.IncrBy(key, by)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}

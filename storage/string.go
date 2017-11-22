@@ -25,25 +25,25 @@ func (i *StringItem) GetTTL() int {
 	return i.TTL
 }
 
-func Set(key, val string) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Set(key, val string) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	stopTTLChecker(key)
+	s.stopTTLChecker(key)
 
 	i := &StringItem{
 		Data: val,
 		Type: typeString,
 		TTL:  -1,
 	}
-	storage[key] = i
+	s.data[key] = i
 }
 
-func Get(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Get(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "$-1", nil
 	}
@@ -57,18 +57,18 @@ func Get(key string) (string, error) {
 	return res, nil
 }
 
-func Append(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Append(key, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		i = &StringItem{
 			Data: val,
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
+		s.data[key] = i
 		res := fmt.Sprintf(":%d", len(val))
 		return res, nil
 	}
@@ -83,22 +83,22 @@ func Append(key, val string) (string, error) {
 	return res, nil
 }
 
-func GetSet(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) GetSet(key, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	old, ok := storage[key]
+	old, ok := s.data[key]
 	if !ok {
 		i := &StringItem{
 			Data: val,
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
+		s.data[key] = i
 		return "$-1", nil
 	}
 
-	stopTTLChecker(key)
+	s.stopTTLChecker(key)
 
 	sold, ok := old.(*StringItem)
 	if !ok {
@@ -110,17 +110,17 @@ func GetSet(key, val string) (string, error) {
 		Type: typeString,
 		TTL:  -1,
 	}
-	storage[key] = new
+	s.data[key] = new
 
 	res := fmt.Sprintf("$%d\r\n%s", len(sold.Data), sold.Data)
 	return res, nil
 }
 
-func Strlen(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Strlen(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "-1", nil
 	}
@@ -134,18 +134,18 @@ func Strlen(key string) (string, error) {
 	return res, nil
 }
 
-func IncrBy(key string, by int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) IncrBy(key string, by int) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		i := &StringItem{
 			Data: strconv.Itoa(by),
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
+		s.data[key] = i
 		res := fmt.Sprintf(":%d", by)
 		return res, nil
 	}

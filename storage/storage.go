@@ -10,8 +10,10 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-var locker = &sync.Mutex{}
-var storage = map[string]Item{}
+type JTStorage struct {
+	l    sync.Mutex
+	data map[string]Item
+}
 
 // Item is interface that wraps GetType, SetTTL, GetTTL methods
 type Item interface {
@@ -41,9 +43,9 @@ var (
 )
 
 // Save is used to make backups
-func Save() {
+func (s *JTStorage) Save() {
 	storageCopy := make(map[string]Item)
-	for k, v := range storage {
+	for k, v := range s.data {
 		storageCopy[k] = v
 	}
 

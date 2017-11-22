@@ -30,18 +30,18 @@ func (i *DictItem) GetTTL() int {
 }
 
 // DSet is used to create dict with some fields
-func DSet(key string, vals map[string]string) error {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DSet(key string, vals map[string]string) error {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		di := &DictItem{
 			Data: vals,
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
+		s.data[key] = di
 		return nil
 	}
 
@@ -58,11 +58,11 @@ func DSet(key string, vals map[string]string) error {
 }
 
 // DGet returns expected dict fields
-func DGet(key string, fields []string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DGet(key string, fields []string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "*1\r\n$-1", nil
 	}
@@ -91,11 +91,11 @@ func DGet(key string, fields []string) (string, error) {
 }
 
 // DDel removes field from dict
-func DDel(key, field string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DDel(key, field string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}
@@ -110,11 +110,11 @@ func DDel(key, field string) (string, error) {
 }
 
 // DExists checks if field exists in dict
-func DExists(key, field string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DExists(key, field string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}
@@ -133,11 +133,11 @@ func DExists(key, field string) (string, error) {
 }
 
 // DLen returns dict's length
-func DLen(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DLen(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}
@@ -153,11 +153,11 @@ func DLen(key string) (string, error) {
 
 // DIncrBy increments by "by" value dict's field
 // or returns error
-func DIncrBy(key, field string, by int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DIncrBy(key, field string, by int) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		d := map[string]string{field: strconv.Itoa(by)}
 		di := &DictItem{
@@ -165,7 +165,7 @@ func DIncrBy(key, field string, by int) (string, error) {
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
+		s.data[key] = di
 
 		res := fmt.Sprintf(":%d", by)
 		return res, nil
@@ -198,11 +198,11 @@ func DIncrBy(key, field string, by int) (string, error) {
 
 // DIncrByFloat increments by "by" value dict's field
 // or returns error
-func DIncrByFloat(key, field string, by float64) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DIncrByFloat(key, field string, by float64) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		val := strconv.FormatFloat(by, 'f', -1, 64)
 		d := map[string]string{field: val}
@@ -211,7 +211,7 @@ func DIncrByFloat(key, field string, by float64) (string, error) {
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
+		s.data[key] = di
 		return val, nil
 	}
 

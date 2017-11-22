@@ -26,16 +26,21 @@ import (
 var dump = "dump.db"
 
 // Init inits storage module and load dump db if needed
-func Init(config config.Config) {
-	if config.DB == "" {
-		return
+func Init(config config.Config) *JTStorage {
+	s := &JTStorage{
+		l:    sync.Mutex{},
+		data: map[string]Item{},
 	}
 
-	dump = config.DB
-	loadDump()
+	if config.DB != "" {
+		dump = config.DB
+		s.loadDump(dump)
+	}
+
+	return s
 }
 
-func loadDump() {
+func (s *JTStorage) loadDump(dump string) {
 	if _, err := os.Open(dump); err != nil {
 		return
 	}
@@ -54,9 +59,9 @@ func loadDump() {
 
 		wg := &sync.WaitGroup{}
 		wg.Add(3)
-		go loadStrings(ds, wg)
-		go loadLists(dl, wg)
-		go loadDicts(dd, wg)
+		go s.loadStrings(ds, wg)
+		go s.loadLists(dl, wg)
+		go s.loadDicts(dd, wg)
 		wg.Wait()
 
 		return err
@@ -66,7 +71,7 @@ func loadDump() {
 	}
 }
 
-func loadStrings(b *bolt.Bucket, wg *sync.WaitGroup) {
+func (s *JTStorage) loadStrings(b *bolt.Bucket, wg *sync.WaitGroup) {
 	defer wg.Done()
 	err := b.ForEach(func(k, v []byte) error {
 		si := &StringItem{}
@@ -75,7 +80,7 @@ func loadStrings(b *bolt.Bucket, wg *sync.WaitGroup) {
 			return err
 		}
 		si.TTL = -1
-		storage[string(k)] = si
+		s.data[string(k)] = si
 		return nil
 	})
 	if err != nil {
@@ -83,7 +88,7 @@ func loadStrings(b *bolt.Bucket, wg *sync.WaitGroup) {
 	}
 }
 
-func loadLists(b *bolt.Bucket, wg *sync.WaitGroup) {
+func (s *JTStorage) loadLists(b *bolt.Bucket, wg *sync.WaitGroup) {
 	defer wg.Done()
 	err := b.ForEach(func(k, v []byte) error {
 		li := &ListItem{}
@@ -92,7 +97,7 @@ func loadLists(b *bolt.Bucket, wg *sync.WaitGroup) {
 			return err
 		}
 		li.TTL = -1
-		storage[string(k)] = li
+		s.data[string(k)] = li
 		return nil
 	})
 	if err != nil {
@@ -100,7 +105,7 @@ func loadLists(b *bolt.Bucket, wg *sync.WaitGroup) {
 	}
 }
 
-func loadDicts(b *bolt.Bucket, wg *sync.WaitGroup) {
+func (s *JTStorage) loadDicts(b *bolt.Bucket, wg *sync.WaitGroup) {
 	defer wg.Done()
 	err := b.ForEach(func(k, v []byte) error {
 		di := &DictItem{}
@@ -109,7 +114,7 @@ func loadDicts(b *bolt.Bucket, wg *sync.WaitGroup) {
 			return err
 		}
 		di.TTL = -1
-		storage[string(k)] = di
+		s.data[string(k)] = di
 		return nil
 	})
 	if err != nil {

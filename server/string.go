@@ -35,7 +35,7 @@ func handlerSet(args [][]byte, c *client) {
 
 	key := string(args[1])
 	val := string(args[2])
-	storage.Set(key, val)
+	jtStorage.Set(key, val)
 	sendResult(resultOK, c.w)
 }
 
@@ -46,7 +46,7 @@ func handlerGet(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.Get(key)
+	res, err := jtStorage.Get(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -63,7 +63,7 @@ func handlerAppend(args [][]byte, c *client) {
 
 	key := string(args[1])
 	append := string(args[2])
-	res, err := storage.Append(key, append)
+	res, err := jtStorage.Append(key, append)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -80,7 +80,7 @@ func handlerGetSet(args [][]byte, c *client) {
 
 	key := string(args[1])
 	val := string(args[2])
-	res, err := storage.GetSet(key, val)
+	res, err := jtStorage.GetSet(key, val)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -96,7 +96,7 @@ func handlerStrlen(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.Strlen(key)
+	res, err := jtStorage.Strlen(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -112,7 +112,7 @@ func handlerIncr(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.IncrBy(key, 1)
+	res, err := jtStorage.IncrBy(key, 1)
 	if err == storage.ErrorIsNotInteger {
 		sendResult(errorIsNotInteger, c.w)
 		return
@@ -134,7 +134,7 @@ func handlerIncrBy(args [][]byte, c *client) {
 		return
 	}
 
-	val, err := storage.IncrBy(key, by)
+	val, err := jtStorage.IncrBy(key, by)
 	if err == storage.ErrorIsNotInteger {
 		sendResult(errorIsNotInteger, c.w)
 		return

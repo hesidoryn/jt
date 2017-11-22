@@ -42,7 +42,7 @@ func handlerDSet(args [][]byte, c *client) {
 		k, v := string(args[i]), string(args[i+1])
 		vals[k] = v
 	}
-	err := storage.DSet(key, vals)
+	err := jtStorage.DSet(key, vals)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -62,7 +62,7 @@ func handlerDGet(args [][]byte, c *client) {
 	for i := 2; i < len(args); i++ {
 		fields = append(fields, string(args[i]))
 	}
-	res, err := storage.DGet(key, fields)
+	res, err := jtStorage.DGet(key, fields)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -79,7 +79,7 @@ func handlerDDel(args [][]byte, c *client) {
 
 	key := string(args[1])
 	field := string(args[2])
-	res, err := storage.DDel(key, field)
+	res, err := jtStorage.DDel(key, field)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -96,7 +96,7 @@ func handlerDExists(args [][]byte, c *client) {
 
 	key := string(args[1])
 	field := string(args[2])
-	res, err := storage.DExists(key, field)
+	res, err := jtStorage.DExists(key, field)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -112,7 +112,7 @@ func handlerDLen(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.DLen(key)
+	res, err := jtStorage.DLen(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -135,7 +135,7 @@ func handlerDIncrBy(args [][]byte, c *client) {
 		return
 	}
 
-	res, err := storage.DIncrBy(key, field, by)
+	res, err := jtStorage.DIncrBy(key, field, by)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -158,7 +158,7 @@ func handlerDIncrByFloat(args [][]byte, c *client) {
 		return
 	}
 
-	res, err := storage.DIncrByFloat(key, field, by)
+	res, err := jtStorage.DIncrByFloat(key, field, by)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return

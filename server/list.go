@@ -37,7 +37,7 @@ func handlerLPush(args [][]byte, c *client) {
 
 	key := string(args[1])
 	val := string(args[2])
-	res, err := storage.LPush(key, val)
+	res, err := jtStorage.LPush(key, val)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -54,7 +54,7 @@ func handlerRPush(args [][]byte, c *client) {
 
 	key := string(args[1])
 	val := string(args[2])
-	res, err := storage.RPush(key, val)
+	res, err := jtStorage.RPush(key, val)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -70,7 +70,7 @@ func handlerLPop(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.LPop(key)
+	res, err := jtStorage.LPop(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -86,7 +86,7 @@ func handlerRPop(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.RPop(key)
+	res, err := jtStorage.RPop(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -108,7 +108,7 @@ func handlerLRem(args [][]byte, c *client) {
 		return
 	}
 	val := string(args[3])
-	res, err := storage.LRem(key, count, val)
+	res, err := jtStorage.LRem(key, count, val)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -130,7 +130,7 @@ func handlerLIndex(args [][]byte, c *client) {
 		return
 	}
 
-	res, err := storage.LIndex(key, index)
+	res, err := jtStorage.LIndex(key, index)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -157,7 +157,7 @@ func handlerLRange(args [][]byte, c *client) {
 		return
 	}
 
-	res, err := storage.LRange(key, start, end)
+	res, err := jtStorage.LRange(key, start, end)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return
@@ -173,7 +173,7 @@ func handlerLLen(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.LLen(key)
+	res, err := jtStorage.LLen(key)
 	if err == storage.ErrorWrongType {
 		sendResult(errorWrongType, c.w)
 		return

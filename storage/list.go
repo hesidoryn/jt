@@ -28,18 +28,18 @@ func (i *ListItem) GetTTL() int {
 	return i.TTL
 }
 
-func LPush(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LPush(key, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		li := &ListItem{
 			Data: []string{val},
 			Type: typeList,
 			TTL:  -1,
 		}
-		storage[key] = li
+		s.data[key] = li
 		return ":1", nil
 	}
 
@@ -55,18 +55,18 @@ func LPush(key, val string) (string, error) {
 	return res, nil
 }
 
-func RPush(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) RPush(key, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		li := &ListItem{
 			Data: []string{val},
 			Type: typeList,
 			TTL:  -1,
 		}
-		storage[key] = li
+		s.data[key] = li
 		return ":1", nil
 	}
 
@@ -80,11 +80,11 @@ func RPush(key, val string) (string, error) {
 	return res, nil
 }
 
-func LPop(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LPop(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "$-1", nil
 	}
@@ -104,11 +104,11 @@ func LPop(key string) (string, error) {
 	return res, nil
 }
 
-func RPop(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) RPop(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "$-1", nil
 	}
@@ -128,11 +128,11 @@ func RPop(key string) (string, error) {
 	return res, nil
 }
 
-func LRem(key string, count int, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LRem(key string, count int, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}
@@ -187,11 +187,11 @@ func LRem(key string, count int, val string) (string, error) {
 	return res, nil
 }
 
-func LIndex(key string, index int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LIndex(key string, index int) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}
@@ -215,11 +215,11 @@ func LIndex(key string, index int) (string, error) {
 	return res, nil
 }
 
-func LRange(key string, start, end int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LRange(key string, start, end int) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return "*0", nil
 	}
@@ -261,11 +261,11 @@ func LRange(key string, start, end int) (string, error) {
 	return res, nil
 }
 
-func LLen(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) LLen(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		return ":0", nil
 	}

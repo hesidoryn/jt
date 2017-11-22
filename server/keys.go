@@ -3,8 +3,6 @@ package server
 import (
 	"fmt"
 	"strconv"
-
-	"github.com/hesidoryn/jt/storage"
 )
 
 const (
@@ -36,7 +34,7 @@ func handlerDel(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res, err := storage.Delete(key)
+	res, err := jtStorage.Delete(key)
 	if err != nil {
 		sendResult(res, c.w)
 		return
@@ -53,7 +51,7 @@ func handlerRename(args [][]byte, c *client) {
 
 	key := string(args[1])
 	newKey := string(args[2])
-	err := storage.Rename(key, newKey)
+	err := jtStorage.Rename(key, newKey)
 	if err != nil {
 		sendResult(errorNoSuchKey, c.w)
 		return
@@ -69,7 +67,7 @@ func handlerTTL(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res := storage.GetTTL(key)
+	res := jtStorage.GetTTL(key)
 
 	sendResult(res, c.w)
 }
@@ -81,7 +79,7 @@ func handlerPersist(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res := storage.Persist(key)
+	res := jtStorage.Persist(key)
 
 	sendResult(res, c.w)
 }
@@ -99,7 +97,7 @@ func handlerExpire(args [][]byte, c *client) {
 		return
 	}
 
-	res := storage.Expire(key, ttl)
+	res := jtStorage.Expire(key, ttl)
 
 	sendResult(res, c.w)
 }
@@ -111,7 +109,7 @@ func handlerType(args [][]byte, c *client) {
 	}
 
 	key := string(args[1])
-	res := storage.GetType(key)
+	res := jtStorage.GetType(key)
 
 	sendResult(res, c.w)
 }
@@ -123,7 +121,7 @@ func handlerKeys(args [][]byte, c *client) {
 	}
 
 	search := string(args[1])
-	res := storage.Keys(search)
+	res := jtStorage.Keys(search)
 
 	sendResult(res, c.w)
 }
@@ -138,7 +136,7 @@ func handlerExists(args [][]byte, c *client) {
 	for i := 1; i < len(args); i++ {
 		keys = append(keys, string(args[i]))
 	}
-	res := storage.Exists(keys)
+	res := jtStorage.Exists(keys)
 
 	sendResult(res, c.w)
 }

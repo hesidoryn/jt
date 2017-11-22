@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/hesidoryn/jt/config"
+	"github.com/hesidoryn/jt/storage"
 )
 
 type client struct {
@@ -21,9 +22,9 @@ type client struct {
 }
 
 var (
-	handlers = map[string]func(args [][]byte, c *client){}
-
-	password = ""
+	handlers  = map[string]func(args [][]byte, c *client){}
+	jtStorage = &storage.JTStorage{}
+	password  = ""
 )
 
 const (
@@ -45,6 +46,7 @@ const (
 
 // Init function inits tcp server
 func Init(config config.Config) {
+	jtStorage = storage.Init(config)
 	password = config.Password
 	initHandlers()
 

@@ -2,8 +2,6 @@ package server
 
 import (
 	"fmt"
-
-	"github.com/hesidoryn/jt/storage"
 )
 
 const (
@@ -55,6 +53,6 @@ func handlerSave(args [][]byte, c *client) {
 		return
 	}
 
-	storage.Save()
+	jtStorage.Save()
 	sendResult(resultOK, c.w)
 }
