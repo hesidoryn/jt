@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -25,84 +24,81 @@ func (i *StringItem) GetTTL() int {
 	return i.TTL
 }
 
-func Set(key, val string) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Set(key, val string) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	stopTTLChecker(key)
+	s.stopTTLChecker(key)
 
 	i := &StringItem{
 		Data: val,
 		Type: typeString,
 		TTL:  -1,
 	}
-	storage[key] = i
+	s.data[key] = i
 }
 
-func Get(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Get(key string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
-		return "$-1", nil
+		return "", nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "$-1", ErrorWrongType
+		return "", ErrorWrongType
 	}
 
-	res := fmt.Sprintf("$%d\r\n%s", len(si.Data), si.Data)
-	return res, nil
+	return si.Data, nil
 }
 
-func Append(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Append(key, val string) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		i = &StringItem{
 			Data: val,
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
-		res := fmt.Sprintf(":%d", len(val))
-		return res, nil
+		s.data[key] = i
+		return len(val), nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	si.Data += val
-	res := fmt.Sprintf(":%d", len(si.Data))
-	return res, nil
+	return len(si.Data), nil
 }
 
-func GetSet(key, val string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) GetSet(key, val string) (string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	old, ok := storage[key]
+	old, ok := s.data[key]
 	if !ok {
 		i := &StringItem{
 			Data: val,
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
-		return "$-1", nil
+		s.data[key] = i
+		return "", ErrorIsNotExist
 	}
 
-	stopTTLChecker(key)
+	s.stopTTLChecker(key)
 
 	sold, ok := old.(*StringItem)
 	if !ok {
-		return "$-1", ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	new := &StringItem{
@@ -110,57 +106,54 @@ func GetSet(key, val string) (string, error) {
 		Type: typeString,
 		TTL:  -1,
 	}
-	storage[key] = new
+	s.data[key] = new
 
-	res := fmt.Sprintf("$%d\r\n%s", len(sold.Data), sold.Data)
-	return res, nil
+	return sold.Data, nil
 }
 
-func Strlen(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) Strlen(key string) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
-		return "-1", nil
+		return -1, ErrorIsNotExist
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "-1", ErrorWrongType
+		return -1, ErrorWrongType
 	}
 
-	res := fmt.Sprintf(":%d", len(si.Data))
-	return res, nil
+	return len(si.Data), nil
 }
 
-func IncrBy(key string, by int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) IncrBy(key string, by int) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		i := &StringItem{
 			Data: strconv.Itoa(by),
 			Type: typeString,
 			TTL:  -1,
 		}
-		storage[key] = i
-		res := fmt.Sprintf(":%d", by)
-		return res, nil
+		s.data[key] = i
+		return by, nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	siInt, err := strconv.Atoi(si.Data)
 	if err != nil {
-		return ":0", ErrorIsNotInteger
+		return 0, ErrorIsNotInteger
 	}
 
-	si.Data = strconv.Itoa(siInt + by)
-	res := fmt.Sprintf(":%s", si.Data)
-	return res, nil
+	result := siInt + by
+	si.Data = strconv.Itoa(result)
+	return result, nil
 }

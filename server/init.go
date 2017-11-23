@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/hesidoryn/jt/config"
+	"github.com/hesidoryn/jt/storage"
 )
 
 type client struct {
@@ -20,15 +21,23 @@ type client struct {
 	isAuthorized bool
 }
 
-var (
-	handlers = map[string]func(args [][]byte, c *client){}
+type JTServer struct {
+	routes map[string]jtHandlerFunc
+}
 
-	password = ""
+var (
+	handlers  = map[string]func(args [][]byte, c *client){}
+	password  string
+	jtStorage = &storage.JTStorage{}
 )
 
 const (
-	resultOK   = "+OK"
-	resultPONG = "+PONG"
+	resultOK             = "+OK"
+	resultPONG           = "+PONG"
+	resultDefaultString  = "$-1"
+	resultDefaultInteger = "-1"
+	resultDefaultList    = "*0"
+	resultDefaultDict    = "*1\r\n$-1"
 
 	errorUnknownCommand  = "-ERR unknown command '%s'"
 	errorWrongArguments  = "-ERR wrong number of arguments for '%s' command"
@@ -45,8 +54,13 @@ const (
 
 // Init function inits tcp server
 func Init(config config.Config) {
+	jtStorage = storage.Init(config)
+
 	password = config.Password
-	initHandlers()
+	jtServer := &JTServer{
+		routes: map[string]jtHandlerFunc{},
+	}
+	jtServer.loadRoutes()
 
 	listen, err := net.Listen("tcp4", ":"+config.Port)
 	defer listen.Close()
@@ -75,19 +89,21 @@ func Init(config config.Config) {
 			sc:           scanner,
 			isAuthorized: isAuth,
 		}
-		go handleConnection(c)
+		go jtServer.handleConnection(c)
 	}
 }
 
-func handleConnection(c *client) {
+func (s *JTServer) handleConnection(c *client) {
 	defer c.conn.Close()
+
+	context := jtContext{client: c}
 
 	scanner := bufio.NewScanner(c.conn)
 	for scanner.Scan() {
 		ln := scanner.Bytes()
 		args, err := parseArgs(ln)
 		if err != nil {
-			sendResult(errorProtocolError, c.w)
+			context.sendResult(errorProtocolError)
 			return
 		}
 		if len(args) == 0 {
@@ -95,24 +111,14 @@ func handleConnection(c *client) {
 		}
 
 		command := string(bytes.ToUpper(args[0]))
-		handler, ok := handlers[command]
+		handler, ok := s.routes[command]
 		if !ok {
-			sendResult(fmt.Sprintf(errorUnknownCommand, args[0]), c.w)
+			context.sendResult(fmt.Sprintf(errorUnknownCommand, command))
 			continue
 		}
 
-		if command != cmdAuth && !c.isAuthorized {
-			sendResult(errorNoAuth, c.w)
-			continue
-		}
-		handler(args, c)
+		context.command = command
+		context.args = args
+		handler(context)
 	}
-}
-
-func initHandlers() {
-	initServerHandlers()
-	initKeysHandlers()
-	initStringHandlers()
-	initListHandlers()
-	initDictHandlers()
 }

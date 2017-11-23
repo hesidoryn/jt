@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/hesidoryn/jt/storage"
@@ -18,166 +17,125 @@ const (
 	cmdLLen   = "LLEN"
 )
 
-func initListHandlers() {
-	handlers[cmdLPush] = handlerLPush
-	handlers[cmdRPush] = handlerRPush
-	handlers[cmdLPop] = handlerLPop
-	handlers[cmdRPop] = handlerRPop
-	handlers[cmdLRem] = handlerLRem
-	handlers[cmdLIndex] = handlerLIndex
-	handlers[cmdLRange] = handlerLRange
-	handlers[cmdLLen] = handlerLLen
-}
-
-func handlerLPush(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	val := string(args[2])
-	res, err := storage.LPush(key, val)
+func lpush(c jtContext) {
+	key, val := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.LPush(key, val)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerRPush(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	val := string(args[2])
-	res, err := storage.RPush(key, val)
+func rpush(c jtContext) {
+	key, val := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.RPush(key, val)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerLPop(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+func lpop(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.LPop(key)
+	if err == storage.ErrorIsNotExist {
+		c.sendResult(resultDefaultString)
 		return
 	}
-
-	key := string(args[1])
-	res, err := storage.LPop(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareStringResult(data))
 }
 
-func handlerRPop(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+func rpop(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.RPop(key)
+	if err == storage.ErrorIsNotExist {
+		c.sendResult(resultDefaultString)
 		return
 	}
-
-	key := string(args[1])
-	res, err := storage.RPop(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareStringResult(data))
 }
 
-func handlerLRem(args [][]byte, c *client) {
-	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	count, err := strconv.Atoi(string(args[2]))
+func lrem(c jtContext) {
+	key := string(c.args[1])
+	count, err := strconv.Atoi(string(c.args[2]))
 	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
-	val := string(args[3])
-	res, err := storage.LRem(key, count, val)
+	val := string(c.args[3])
+	data, err := jtStorage.LRem(key, count, val)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerLIndex(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	index, err := strconv.Atoi(string(args[2]))
+func lindex(c jtContext) {
+	key := string(c.args[1])
+	index, err := strconv.Atoi(string(c.args[2]))
 	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	res, err := storage.LIndex(key, index)
+	data, err := jtStorage.LIndex(key, index)
+	if err == storage.ErrorIsNotExist {
+		c.sendResult(prepareIntegerResult(0))
+		return
+	}
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareStringResult(data))
 }
 
-func handlerLRange(args [][]byte, c *client) {
-	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+func lrange(c jtContext) {
+	key := string(c.args[1])
+	start, err := strconv.Atoi(string(c.args[2]))
+	if err != nil {
+		c.sendResult(errorIsNotInteger)
+		return
+	}
+	end, err := strconv.Atoi(string(c.args[3]))
+	if err != nil {
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	key := string(args[1])
-	start, err := strconv.Atoi(string(args[2]))
-	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
-		return
-	}
-	end, err := strconv.Atoi(string(args[3]))
-	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
-		return
-	}
-
-	res, err := storage.LRange(key, start, end)
+	data, err := jtStorage.LRange(key, start, end)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareListResult(data))
 }
 
-func handlerLLen(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res, err := storage.LLen(key)
+func llen(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.LLen(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }

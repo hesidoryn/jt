@@ -1,46 +1,48 @@
 package storage
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/hesidoryn/jt/config"
 )
 
 func TestLPop(t *testing.T) {
+	s := Init(config.Config{})
 	key := "lpop"
 	// key doesn't exist in storage
-	res, err := LPop(key)
-	if err != nil {
-		t.Error("Expected nil, got ", err)
+	res, err := s.LPop(key)
+	if err != ErrorIsNotExist {
+		t.Error("Expected ErrorIsNotExist, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key isn't ListItem
-	storage[key] = &StringItem{}
-	res, err = LPop(key)
+	s.data[key] = &StringItem{}
+	res, err = s.LPop(key)
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// key is empty ListItem
-	storage[key] = &ListItem{}
-	res, err = LPop(key)
+	s.data[key] = &ListItem{}
+	res, err = s.LPop(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key is ListItem
 	testData := []string{"item1", "item2"}
-	expected := fmt.Sprintf("$%d\r\n%s", len(testData[0]), testData[0])
-	storage[key] = &ListItem{Data: testData}
-	res, err = LPop(key)
+	expected := testData[0]
+	s.data[key] = &ListItem{Data: testData}
+	res, err = s.LPop(key)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}

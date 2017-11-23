@@ -1,9 +1,7 @@
 package storage
 
 import (
-	"fmt"
 	"strconv"
-	"strings"
 )
 
 // DictItem is struct for dict.
@@ -30,18 +28,18 @@ func (i *DictItem) GetTTL() int {
 }
 
 // DSet is used to create dict with some fields
-func DSet(key string, vals map[string]string) error {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DSet(key string, vals map[string]string) error {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		di := &DictItem{
 			Data: vals,
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
+		s.data[key] = di
 		return nil
 	}
 
@@ -58,106 +56,100 @@ func DSet(key string, vals map[string]string) error {
 }
 
 // DGet returns expected dict fields
-func DGet(key string, fields []string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DGet(key string, fields []string) (map[string]string, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	r := make(map[string]string)
+	i, ok := s.data[key]
 	if !ok {
-		return "*1\r\n$-1", nil
+		return r, ErrorIsNotExist
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return "", ErrorWrongType
+		return r, ErrorWrongType
 	}
 
-	fcount, res := 0, []string{}
-	for i := range fields {
-		val, ok := di.Data[fields[i]]
+	for _, f := range fields {
+		val, ok := di.Data[f]
 		if !ok {
-			fcount++
-			res = append(res, "$-1")
 			continue
 		}
 
-		fcount++
-		lval := fmt.Sprintf("$%d", len(val))
-		res = append(res, lval, val)
+		r[f] = val
 	}
 
-	result := fmt.Sprintf("*%d\r\n%s", fcount, strings.Join(res, "\r\n"))
-	return result, nil
+	return r, nil
 }
 
 // DDel removes field from dict
-func DDel(key, field string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DDel(key, field string) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	delete(di.Data, field)
-	return ":1", nil
+	return 1, nil
 }
 
 // DExists checks if field exists in dict
-func DExists(key, field string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DExists(key, field string) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	_, ok = di.Data[field]
 	if !ok {
-		return ":0", nil
+		return 0, nil
 	}
 
-	return ":1", nil
+	return 1, nil
 }
 
 // DLen returns dict's length
-func DLen(key string) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DLen(key string) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
-	res := fmt.Sprintf(":%d", len(di.Data))
-	return res, nil
+	return len(di.Data), nil
 }
 
 // DIncrBy increments by "by" value dict's field
 // or returns error
-func DIncrBy(key, field string, by int) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DIncrBy(key, field string, by int) (int, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		d := map[string]string{field: strconv.Itoa(by)}
 		di := &DictItem{
@@ -165,44 +157,40 @@ func DIncrBy(key, field string, by int) (string, error) {
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
+		s.data[key] = di
 
-		res := fmt.Sprintf(":%d", by)
-		return res, nil
+		return by, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	val, ok := di.Data[field]
 	if !ok {
 		di.Data[field] = strconv.Itoa(by)
-
-		res := fmt.Sprintf(":%d", by)
-		return res, nil
+		return by, nil
 	}
 
 	valInt, err := strconv.Atoi(val)
 	if err != nil {
-		return ":0", ErrorIsNotInteger
+		return 0, ErrorIsNotInteger
 	}
 
 	newData := valInt + by
 	di.Data[field] = strconv.Itoa(newData)
 
-	res := fmt.Sprintf(":%d", newData)
-	return res, nil
+	return newData, nil
 }
 
 // DIncrByFloat increments by "by" value dict's field
 // or returns error
-func DIncrByFloat(key, field string, by float64) (string, error) {
-	locker.Lock()
-	defer locker.Unlock()
+func (s *JTStorage) DIncrByFloat(key, field string, by float64) (float64, error) {
+	s.l.Lock()
+	defer s.l.Unlock()
 
-	i, ok := storage[key]
+	i, ok := s.data[key]
 	if !ok {
 		val := strconv.FormatFloat(by, 'f', -1, 64)
 		d := map[string]string{field: val}
@@ -211,27 +199,27 @@ func DIncrByFloat(key, field string, by float64) (string, error) {
 			Type: typeDict,
 			TTL:  -1,
 		}
-		storage[key] = di
-		return val, nil
+		s.data[key] = di
+		return by, nil
 	}
 
 	di, ok := i.(*DictItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	val, ok := di.Data[field]
 	if !ok {
 		di.Data[field] = strconv.FormatFloat(by, 'f', -1, 64)
-		return di.Data[field], nil
+		return by, nil
 	}
 
 	valFloat, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		return "", ErrorIsNotFloat
+		return 0, ErrorIsNotFloat
 	}
 
-	res := valFloat + by
-	di.Data[field] = strconv.FormatFloat(res, 'f', -1, 64)
-	return di.Data[field], nil
+	newData := valFloat + by
+	di.Data[field] = strconv.FormatFloat(newData, 'f', -1, 64)
+	return newData, nil
 }

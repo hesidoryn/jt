@@ -10,8 +10,10 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-var locker = &sync.Mutex{}
-var storage = map[string]Item{}
+type JTStorage struct {
+	l    sync.Mutex
+	data map[string]Item
+}
 
 // Item is interface that wraps GetType, SetTTL, GetTTL methods
 type Item interface {
@@ -29,9 +31,13 @@ const (
 	dumpString = "dumpString"
 	dumpList   = "dumpList"
 	dumpDict   = "dumpDict"
+
+	resultDefaultString = "$-1"
 )
 
 var (
+	// ErrorIsNotExist is sent when keys is not exist
+	ErrorIsNotExist = errors.New("key is not exist")
 	// ErrorWrongType is sent when command is called for wrong type
 	ErrorWrongType = errors.New("wrong type")
 	// ErrorIsNotInteger is sent when command is called for non-integer value
@@ -41,9 +47,9 @@ var (
 )
 
 // Save is used to make backups
-func Save() {
+func (s *JTStorage) Save() {
 	storageCopy := make(map[string]Item)
-	for k, v := range storage {
+	for k, v := range s.data {
 		storageCopy[k] = v
 	}
 
