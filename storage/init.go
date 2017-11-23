@@ -32,8 +32,8 @@ func Init(config config.Config) *JTStorage {
 		data: map[string]Item{},
 	}
 
-	if config.DB != "" {
-		dump = config.DB
+	if config.DumpFile != "" {
+		dump = config.DumpFile
 		s.loadDump(dump)
 	}
 

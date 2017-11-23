@@ -25,10 +25,17 @@ type JTServer struct {
 	routes map[string]jtHandlerFunc
 }
 
+func (s *JTServer) Handle(command string, handler jtHandlerFunc, ms ...jtMiddlewareFunc) {
+	result := handler
+	for _, m := range ms {
+		result = m(result)
+	}
+	s.routes[command] = result
+}
+
 var (
-	handlers  = map[string]func(args [][]byte, c *client){}
 	password  string
-	jtStorage = &storage.JTStorage{}
+	jtStorage *storage.JTStorage
 )
 
 const (

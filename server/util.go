@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+type jtHandlerFunc func(c jtContext)
+
 type jtContext struct {
 	command string
 	args    [][]byte
@@ -17,16 +19,6 @@ func (c *jtContext) sendResult(result string) {
 	c.client.w.WriteString(result)
 	c.client.w.WriteString("\r\n")
 	c.client.w.Flush()
-}
-
-type jtHandlerFunc func(c jtContext)
-
-func (s *JTServer) Handle(command string, handler jtHandlerFunc, ms ...jtMiddlewareFunc) {
-	result := handler
-	for _, m := range ms {
-		result = m(result)
-	}
-	s.routes[command] = result
 }
 
 func prepareStringResult(data string) string {
