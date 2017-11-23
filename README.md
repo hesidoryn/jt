@@ -1,7 +1,5 @@
 # JT
 
-## MASTER BRANCH IS DEPRECATED. PLEASE GO TO [REFACTOR](https://github.com/hesidoryn/jt/tree/refactor) BRANCH.
-
 ## Installation
 [here](https://github.com/hesidoryn/jt/blob/master/DEPLOYMENT.md)
 
