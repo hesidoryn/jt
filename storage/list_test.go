@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hesidoryn/jt/config"
@@ -12,11 +11,11 @@ func TestLPop(t *testing.T) {
 	key := "lpop"
 	// key doesn't exist in storage
 	res, err := s.LPop(key)
-	if err != nil {
-		t.Error("Expected nil, got ", err)
+	if err != ErrorIsNotExist {
+		t.Error("Expected ErrorIsNotExist, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key isn't ListItem
@@ -25,8 +24,8 @@ func TestLPop(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// key is empty ListItem
@@ -35,13 +34,13 @@ func TestLPop(t *testing.T) {
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key is ListItem
 	testData := []string{"item1", "item2"}
-	expected := fmt.Sprintf("$%d\r\n%s", len(testData[0]), testData[0])
+	expected := testData[0]
 	s.data[key] = &ListItem{Data: testData}
 	res, err = s.LPop(key)
 	if err != nil {

@@ -31,9 +31,13 @@ const (
 	dumpString = "dumpString"
 	dumpList   = "dumpList"
 	dumpDict   = "dumpDict"
+
+	resultDefaultString = "$-1"
 )
 
 var (
+	// ErrorIsNotExist is sent when keys is not exist
+	ErrorIsNotExist = errors.New("key is not exist")
 	// ErrorWrongType is sent when command is called for wrong type
 	ErrorWrongType = errors.New("wrong type")
 	// ErrorIsNotInteger is sent when command is called for non-integer value

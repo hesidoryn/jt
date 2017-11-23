@@ -1,24 +1,21 @@
 package storage
 
 import (
-	"errors"
-	"fmt"
 	"path"
-	"strings"
 )
 
-func (s *JTStorage) Delete(key string) (string, error) {
+func (s *JTStorage) Delete(key string) int {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	_, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0
 	}
 
 	s.stopTTLChecker(key)
 	delete(s.data, key)
-	return ":1", nil
+	return 1
 }
 
 func (s *JTStorage) Rename(key, newKey string) error {
@@ -27,7 +24,7 @@ func (s *JTStorage) Rename(key, newKey string) error {
 
 	i, ok := s.data[key]
 	if !ok {
-		return errors.New("no such key")
+		return ErrorIsNotExist
 	}
 
 	s.stopTTLChecker(key)
@@ -39,49 +36,48 @@ func (s *JTStorage) Rename(key, newKey string) error {
 	return nil
 }
 
-func (s *JTStorage) Persist(key string) string {
+func (s *JTStorage) Persist(key string) int {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":0"
+		return 0
 	}
 
 	if i.GetTTL() != -1 {
 		s.stopTTLChecker(key)
 		i.SetTTL(-1)
-		return ":1"
+		return 1
 	}
 
-	return ":0"
+	return 0
 }
 
-func (s *JTStorage) Expire(key string, ttl int) string {
+func (s *JTStorage) Expire(key string, ttl int) int {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":0"
+		return 0
 	}
 
 	i.SetTTL(ttl)
 	s.startTTLChecker(key)
-	return ":1"
+	return 1
 }
 
-func (s *JTStorage) GetTTL(key string) string {
+func (s *JTStorage) GetTTL(key string) int {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":-2"
+		return -2
 	}
 
-	res := fmt.Sprintf(":%d", i.GetTTL())
-	return res
+	return i.GetTTL()
 }
 
 func (s *JTStorage) GetType(key string) string {
@@ -96,11 +92,11 @@ func (s *JTStorage) GetType(key string) string {
 	return i.GetType()
 }
 
-func (s *JTStorage) Keys(pattern string) string {
+func (s *JTStorage) Keys(pattern string) []string {
 	s.l.Lock()
 	defer s.l.Unlock()
 
-	res := []string{}
+	result := []string{}
 	for key := range s.data {
 		ok, err := path.Match(pattern, key)
 		if err != nil {
@@ -108,21 +104,14 @@ func (s *JTStorage) Keys(pattern string) string {
 		}
 
 		if ok {
-			lkey := fmt.Sprintf("$%d", len(key))
-			res = append(res, lkey, key)
+			result = append(result, key)
 		}
 	}
 
-	if len(res) == 0 {
-		return "*0"
-	}
-
-	lres := fmt.Sprintf("*%d\r\n", len(res)/2)
-	result := lres + strings.Join(res, "\r\n")
 	return result
 }
 
-func (s *JTStorage) Exists(keys []string) string {
+func (s *JTStorage) Exists(keys []string) int {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -134,5 +123,5 @@ func (s *JTStorage) Exists(keys []string) string {
 		}
 	}
 
-	return fmt.Sprintf(":%d", count)
+	return count
 }

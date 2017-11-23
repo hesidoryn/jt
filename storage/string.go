@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -45,19 +44,18 @@ func (s *JTStorage) Get(key string) (string, error) {
 
 	i, ok := s.data[key]
 	if !ok {
-		return "$-1", nil
+		return "", nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "$-1", ErrorWrongType
+		return "", ErrorWrongType
 	}
 
-	res := fmt.Sprintf("$%d\r\n%s", len(si.Data), si.Data)
-	return res, nil
+	return si.Data, nil
 }
 
-func (s *JTStorage) Append(key, val string) (string, error) {
+func (s *JTStorage) Append(key, val string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -69,18 +67,16 @@ func (s *JTStorage) Append(key, val string) (string, error) {
 			TTL:  -1,
 		}
 		s.data[key] = i
-		res := fmt.Sprintf(":%d", len(val))
-		return res, nil
+		return len(val), nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	si.Data += val
-	res := fmt.Sprintf(":%d", len(si.Data))
-	return res, nil
+	return len(si.Data), nil
 }
 
 func (s *JTStorage) GetSet(key, val string) (string, error) {
@@ -95,14 +91,14 @@ func (s *JTStorage) GetSet(key, val string) (string, error) {
 			TTL:  -1,
 		}
 		s.data[key] = i
-		return "$-1", nil
+		return "", ErrorIsNotExist
 	}
 
 	s.stopTTLChecker(key)
 
 	sold, ok := old.(*StringItem)
 	if !ok {
-		return "$-1", ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	new := &StringItem{
@@ -112,29 +108,27 @@ func (s *JTStorage) GetSet(key, val string) (string, error) {
 	}
 	s.data[key] = new
 
-	res := fmt.Sprintf("$%d\r\n%s", len(sold.Data), sold.Data)
-	return res, nil
+	return sold.Data, nil
 }
 
-func (s *JTStorage) Strlen(key string) (string, error) {
+func (s *JTStorage) Strlen(key string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return "-1", nil
+		return -1, ErrorIsNotExist
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return "-1", ErrorWrongType
+		return -1, ErrorWrongType
 	}
 
-	res := fmt.Sprintf(":%d", len(si.Data))
-	return res, nil
+	return len(si.Data), nil
 }
 
-func (s *JTStorage) IncrBy(key string, by int) (string, error) {
+func (s *JTStorage) IncrBy(key string, by int) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -146,21 +140,20 @@ func (s *JTStorage) IncrBy(key string, by int) (string, error) {
 			TTL:  -1,
 		}
 		s.data[key] = i
-		res := fmt.Sprintf(":%d", by)
-		return res, nil
+		return by, nil
 	}
 
 	si, ok := i.(*StringItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	siInt, err := strconv.Atoi(si.Data)
 	if err != nil {
-		return ":0", ErrorIsNotInteger
+		return 0, ErrorIsNotInteger
 	}
 
-	si.Data = strconv.Itoa(siInt + by)
-	res := fmt.Sprintf(":%s", si.Data)
-	return res, nil
+	result := siInt + by
+	si.Data = strconv.Itoa(result)
+	return result, nil
 }

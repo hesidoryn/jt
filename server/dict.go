@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/hesidoryn/jt/storage"
@@ -17,152 +16,102 @@ const (
 	cmdDIncrByFloat = "DINCRBYFLOAT"
 )
 
-// initDictHandlers inits handlers for dict values
-func initDictHandlers() {
-	handlers[cmdDSet] = handlerDSet
-	handlers[cmdDGet] = handlerDGet
-	handlers[cmdDDel] = handlerDDel
-	handlers[cmdDExists] = handlerDExists
-	handlers[cmdDLen] = handlerDLen
-	handlers[cmdDIncrBy] = handlerDIncrBy
-	handlers[cmdDIncrByFloat] = handlerDIncrByFloat
-}
-
-// handlerDSet is used for setting dict fields
-func handlerDSet(args [][]byte, c *client) {
-	if len(args) < 4 || len(args)%2 != 0 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
+// dset is used for setting dict fields
+func dset(c jtContext) {
+	key := string(c.args[1])
 
 	vals := make(map[string]string)
-	for i := 2; i < len(args); i += 2 {
-		k, v := string(args[i]), string(args[i+1])
+	for i := 2; i < len(c.args); i += 2 {
+		k, v := string(c.args[i]), string(c.args[i+1])
 		vals[k] = v
 	}
 	err := jtStorage.DSet(key, vals)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(resultOK, c.w)
+	c.sendResult(resultOK)
 }
 
-func handlerDGet(args [][]byte, c *client) {
-	if len(args) < 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
+func dget(c jtContext) {
+	key := string(c.args[1])
 	fields := []string{}
-	for i := 2; i < len(args); i++ {
-		fields = append(fields, string(args[i]))
+	for i := 2; i < len(c.args); i++ {
+		fields = append(fields, string(c.args[i]))
 	}
-	res, err := jtStorage.DGet(key, fields)
+	data, err := jtStorage.DGet(key, fields)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareDictResult(data, fields))
 }
 
-func handlerDDel(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	field := string(args[2])
-	res, err := jtStorage.DDel(key, field)
+func ddel(c jtContext) {
+	key, field := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.DDel(key, field)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerDExists(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	field := string(args[2])
-	res, err := jtStorage.DExists(key, field)
+func dexists(c jtContext) {
+	key, field := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.DExists(key, field)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerDLen(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res, err := jtStorage.DLen(key)
+func dlen(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.DLen(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerDIncrBy(args [][]byte, c *client) {
-	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	field := string(args[2])
-	by, err := strconv.Atoi(string(args[3]))
+func dincrBy(c jtContext) {
+	key, field := string(c.args[1]), string(c.args[2])
+	by, err := strconv.Atoi(string(c.args[3]))
 	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	res, err := jtStorage.DIncrBy(key, field, by)
+	data, err := jtStorage.DIncrBy(key, field, by)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerDIncrByFloat(args [][]byte, c *client) {
-	if len(args) != 4 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	field := string(args[2])
-	by, err := strconv.ParseFloat(string(args[3]), 64)
+func dincrByFloat(c jtContext) {
+	key, field := string(c.args[1]), string(c.args[2])
+	by, err := strconv.ParseFloat(string(c.args[3]), 64)
 	if err != nil {
-		sendResult(errorIsNotFloat, c.w)
+		c.sendResult(errorIsNotFloat)
 		return
 	}
 
-	res, err := jtStorage.DIncrByFloat(key, field, by)
+	data, err := jtStorage.DIncrByFloat(key, field, by)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareFloatResult(data))
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/hesidoryn/jt/storage"
@@ -17,128 +16,88 @@ const (
 	cmdIncrBy = "INCRBY"
 )
 
-func initStringHandlers() {
-	handlers[cmdSet] = handlerSet
-	handlers[cmdGet] = handlerGet
-	handlers[cmdAppend] = handlerAppend
-	handlers[cmdGetSet] = handlerGetSet
-	handlers[cmdStrlen] = handlerStrlen
-	handlers[cmdIncr] = handlerIncr
-	handlers[cmdIncrBy] = handlerIncrBy
-}
-
-func handlerSet(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	val := string(args[2])
+func set(c jtContext) {
+	key, val := string(c.args[1]), string(c.args[2])
 	jtStorage.Set(key, val)
-	sendResult(resultOK, c.w)
+	c.sendResult(resultOK)
 }
 
-func handlerGet(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+func get(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.Get(key)
+	if err == storage.ErrorIsNotExist {
+		c.sendResult(resultDefaultString)
 		return
 	}
-
-	key := string(args[1])
-	res, err := jtStorage.Get(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareStringResult(data))
 }
 
-func handlerAppend(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	append := string(args[2])
-	res, err := jtStorage.Append(key, append)
+func hAppend(c jtContext) {
+	key, val := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.Append(key, val)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerGetSet(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
+func getset(c jtContext) {
+	key, val := string(c.args[1]), string(c.args[2])
+	data, err := jtStorage.GetSet(key, val)
+	if err == storage.ErrorIsNotExist {
+		c.sendResult(resultDefaultString)
 		return
 	}
-
-	key := string(args[1])
-	val := string(args[2])
-	res, err := jtStorage.GetSet(key, val)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareStringResult(data))
 }
 
-func handlerStrlen(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res, err := jtStorage.Strlen(key)
+func strlen(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.Strlen(key)
 	if err == storage.ErrorWrongType {
-		sendResult(errorWrongType, c.w)
+		c.sendResult(errorWrongType)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerIncr(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res, err := jtStorage.IncrBy(key, 1)
+func incr(c jtContext) {
+	key := string(c.args[1])
+	data, err := jtStorage.IncrBy(key, 1)
 	if err == storage.ErrorIsNotInteger {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	sendResult(res, c.w)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerIncrBy(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	by, err := strconv.Atoi(string(args[2]))
+func incrBy(c jtContext) {
+	key := string(c.args[1])
+	by, err := strconv.Atoi(string(c.args[2]))
 	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	val, err := jtStorage.IncrBy(key, by)
+	data, err := jtStorage.IncrBy(key, by)
 	if err == storage.ErrorIsNotInteger {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	sendResult(fmt.Sprintf(":%s", val), c.w)
+	c.sendResult(prepareIntegerResult(data))
 }

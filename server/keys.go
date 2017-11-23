@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -16,127 +15,64 @@ const (
 	cmdExists  = "EXISTS"
 )
 
-func initKeysHandlers() {
-	handlers[cmdDel] = handlerDel
-	handlers[cmdRename] = handlerRename
-	handlers[cmdTTL] = handlerTTL
-	handlers[cmdPersist] = handlerPersist
-	handlers[cmdExpire] = handlerExpire
-	handlers[cmdType] = handlerType
-	handlers[cmdKeys] = handlerKeys
-	handlers[cmdExists] = handlerExists
+func del(c jtContext) {
+	key := string(c.args[1])
+	data := jtStorage.Delete(key)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerDel(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res, err := jtStorage.Delete(key)
-	if err != nil {
-		sendResult(res, c.w)
-		return
-	}
-
-	sendResult(res, c.w)
-}
-
-func handlerRename(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	newKey := string(args[2])
+func rename(c jtContext) {
+	key, newKey := string(c.args[1]), string(c.args[2])
 	err := jtStorage.Rename(key, newKey)
 	if err != nil {
-		sendResult(errorNoSuchKey, c.w)
+		c.sendResult(errorNoSuchKey)
 		return
 	}
 
-	sendResult(resultOK, c.w)
+	c.sendResult(resultOK)
 }
 
-func handlerTTL(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res := jtStorage.GetTTL(key)
-
-	sendResult(res, c.w)
+func ttl(c jtContext) {
+	key := string(c.args[1])
+	data := jtStorage.GetTTL(key)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerPersist(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	res := jtStorage.Persist(key)
-
-	sendResult(res, c.w)
+func persist(c jtContext) {
+	key := string(c.args[1])
+	data := jtStorage.Persist(key)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerExpire(args [][]byte, c *client) {
-	if len(args) != 3 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
-	ttl, err := strconv.Atoi(string(args[2]))
+func expire(c jtContext) {
+	key := string(c.args[1])
+	ttl, err := strconv.Atoi(string(c.args[2]))
 	if err != nil {
-		sendResult(errorIsNotInteger, c.w)
+		c.sendResult(errorIsNotInteger)
 		return
 	}
 
-	res := jtStorage.Expire(key, ttl)
-
-	sendResult(res, c.w)
+	data := jtStorage.Expire(key, ttl)
+	c.sendResult(prepareIntegerResult(data))
 }
 
-func handlerType(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	key := string(args[1])
+func hType(c jtContext) {
+	key := string(c.args[1])
 	res := jtStorage.GetType(key)
-
-	sendResult(res, c.w)
+	c.sendResult(res)
 }
 
-func handlerKeys(args [][]byte, c *client) {
-	if len(args) != 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
-	search := string(args[1])
-	res := jtStorage.Keys(search)
-
-	sendResult(res, c.w)
+func keys(c jtContext) {
+	search := string(c.args[1])
+	data := jtStorage.Keys(search)
+	c.sendResult(prepareListResult(data))
 }
 
-func handlerExists(args [][]byte, c *client) {
-	if len(args) < 2 {
-		sendResult(fmt.Sprintf(errorWrongArguments, args[0]), c.w)
-		return
-	}
-
+func exists(c jtContext) {
 	keys := []string{}
-	for i := 1; i < len(args); i++ {
-		keys = append(keys, string(args[i]))
+	for i := 1; i < len(c.args); i++ {
+		keys = append(keys, string(c.args[i]))
 	}
-	res := jtStorage.Exists(keys)
-
-	sendResult(res, c.w)
+	data := jtStorage.Exists(keys)
+	c.sendResult(prepareIntegerResult(data))
 }

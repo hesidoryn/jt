@@ -1,14 +1,79 @@
 package server
 
 import (
-	"bufio"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
-func sendResult(val string, w *bufio.Writer) {
-	w.WriteString(val)
-	w.WriteString("\r\n")
-	w.Flush()
+type jtContext struct {
+	command string
+	args    [][]byte
+	client  *client
+}
+
+func (c *jtContext) sendResult(result string) {
+	c.client.w.WriteString(result)
+	c.client.w.WriteString("\r\n")
+	c.client.w.Flush()
+}
+
+type jtHandlerFunc func(c jtContext)
+
+func (s *JTServer) Handle(command string, handler jtHandlerFunc, ms ...jtMiddlewareFunc) {
+	result := handler
+	for _, m := range ms {
+		result = m(result)
+	}
+	s.routes[command] = result
+}
+
+func prepareStringResult(data string) string {
+	if len(data) == 0 {
+		return resultDefaultString
+	}
+	return fmt.Sprintf("$%d\r\n%s", len(data), data)
+}
+
+func prepareIntegerResult(data int) string {
+	return fmt.Sprintf(":%d", data)
+}
+
+func prepareFloatResult(data float64) string {
+	return strconv.FormatFloat(data, 'f', -1, 64)
+}
+
+func prepareListResult(data []string) string {
+	if len(data) == 0 {
+		return resultDefaultList
+	}
+
+	result := []string{}
+	for i := 0; i < len(data); i++ {
+		result = append(result, fmt.Sprintf("$%d", len(data[i])), data[i])
+	}
+	return fmt.Sprintf("*%d\r\n%s", len(result)/2, strings.Join(result, "\r\n"))
+}
+
+func prepareDictResult(data map[string]string, expected []string) string {
+	if len(data) == 0 {
+		return resultDefaultDict
+	}
+
+	result := []string{}
+	for _, f := range expected {
+		val, ok := data[f]
+		if !ok {
+			result = append(result, resultDefaultString)
+			continue
+		}
+
+		lval := fmt.Sprintf("$%d", len(val))
+		result = append(result, lval, val)
+	}
+
+	return fmt.Sprintf("*%d\r\n%s", len(expected), strings.Join(result, "\r\n"))
 }
 
 func parseArgs(command []byte) ([][]byte, error) {

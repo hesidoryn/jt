@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -16,8 +15,8 @@ func TestGet(t *testing.T) {
 	if err != nil {
 		t.Error("Expected nil, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key isn't StringItem
@@ -26,13 +25,13 @@ func TestGet(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key is StringItem
 	testData := "data"
-	expected := fmt.Sprintf("$%d\r\n%s", len(testData), testData)
+	expected := testData
 	s.data[key] = &StringItem{
 		Data: testData,
 	}
@@ -51,7 +50,7 @@ func TestAppend(t *testing.T) {
 	testData := " World!"
 
 	// test key doesn't exist in storage
-	expected1 := fmt.Sprintf(":%d", len(testData))
+	expected1 := len(testData)
 	res, err := s.Append(key, testData)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
@@ -66,14 +65,14 @@ func TestAppend(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != ":0" {
-		t.Error("Expected :0, got ", res)
+	if res != 0 {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key is StringItem
 	si := &StringItem{Data: "Hello"}
 	s.data[key] = si
-	expected2 := fmt.Sprintf(":%d", len(si.Data)+len(testData))
+	expected2 := len(si.Data) + len(testData)
 
 	res, err = s.Append(key, testData)
 	if err != nil {
@@ -91,11 +90,11 @@ func TestGetSet(t *testing.T) {
 
 	// test key doesn't exist in storage
 	res, err := s.GetSet(key, testData)
-	if err != nil {
-		t.Error("Expected nil, got ", err)
+	if err != ErrorIsNotExist {
+		t.Error("Expected ErrorIsNotExist, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key isn't StringItem
@@ -104,15 +103,15 @@ func TestGetSet(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != "$-1" {
-		t.Error("Expected $-1, got ", res)
+	if res != "" {
+		t.Error("Expected empty string, got ", res)
 	}
 
 	// test key is StringItem
 	oldData := "hello"
 	si := &StringItem{Data: oldData}
 	s.data[key] = si
-	expected := fmt.Sprintf("$%d\r\n%s", len(oldData), oldData)
+	expected := oldData
 
 	res, err = s.GetSet(key, testData)
 	if err != nil {
@@ -130,10 +129,10 @@ func TestStrlen(t *testing.T) {
 
 	// test key doesn't exist in storage
 	res, err := s.Strlen(key)
-	if err != nil {
-		t.Error("Expected nil, got ", err)
+	if err != ErrorIsNotExist {
+		t.Error("Expected ErrorIsNotExist, got ", err)
 	}
-	if res != "-1" {
+	if res != -1 {
 		t.Error("Expected -1, got ", res)
 	}
 
@@ -143,14 +142,14 @@ func TestStrlen(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != "-1" {
+	if res != -1 {
 		t.Error("Expected -1, got ", res)
 	}
 
 	// test key is StringItem
 	si := &StringItem{Data: testData}
 	s.data[key] = si
-	expected := fmt.Sprintf(":%d", len(testData))
+	expected := len(testData)
 
 	res, err = s.Strlen(key)
 	if err != nil {
@@ -167,7 +166,7 @@ func TestIncrBy(t *testing.T) {
 	by := 5
 
 	// test key doesn't exist in storage
-	expected1 := fmt.Sprintf(":%d", by)
+	expected1 := by
 	res, err := s.IncrBy(key, by)
 	if err != nil {
 		t.Error("Expected nil, got ", err)
@@ -182,8 +181,8 @@ func TestIncrBy(t *testing.T) {
 	if err != ErrorWrongType {
 		t.Error("Expected ErrorWrongType, got ", err)
 	}
-	if res != ":0" {
-		t.Error("Expected :0, got ", res)
+	if res != 0 {
+		t.Error("Expected 0, got ", res)
 	}
 
 	// test item isn't integer
@@ -192,15 +191,15 @@ func TestIncrBy(t *testing.T) {
 	if err != ErrorIsNotInteger {
 		t.Error("Expected ErrorIsNotInteger, got ", err)
 	}
-	if res != ":0" {
-		t.Error("Expected :0, got ", res)
+	if res != 0 {
+		t.Error("Expected 0, got ", res)
 	}
 
 	// test item is integer
 	siData := 10
 	si := &StringItem{Data: strconv.Itoa(siData)}
 	s.data[key] = si
-	expected2 := fmt.Sprintf(":%d", siData+by)
+	expected2 := siData + by
 
 	res, err = s.IncrBy(key, by)
 	if err != nil {

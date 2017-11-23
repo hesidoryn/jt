@@ -1,10 +1,5 @@
 package storage
 
-import (
-	"fmt"
-	"strings"
-)
-
 // ListItem is struct that contains list.
 // It implements Item interface.
 type ListItem struct {
@@ -28,7 +23,7 @@ func (i *ListItem) GetTTL() int {
 	return i.TTL
 }
 
-func (s *JTStorage) LPush(key, val string) (string, error) {
+func (s *JTStorage) LPush(key, val string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -40,22 +35,21 @@ func (s *JTStorage) LPush(key, val string) (string, error) {
 			TTL:  -1,
 		}
 		s.data[key] = li
-		return ":1", nil
+		return 1, nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	li.Data = append(li.Data, val)
 	li.Data[0], li.Data[len(li.Data)-1] = li.Data[len(li.Data)-1], li.Data[0]
 
-	res := fmt.Sprintf(":%d", len(li.Data))
-	return res, nil
+	return len(li.Data), nil
 }
 
-func (s *JTStorage) RPush(key, val string) (string, error) {
+func (s *JTStorage) RPush(key, val string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
@@ -67,17 +61,16 @@ func (s *JTStorage) RPush(key, val string) (string, error) {
 			TTL:  -1,
 		}
 		s.data[key] = li
-		return ":1", nil
+		return 1, nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return ":0", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	li.Data = append(li.Data, val)
-	res := fmt.Sprintf(":%d", len(li.Data))
-	return res, nil
+	return len(li.Data), nil
 }
 
 func (s *JTStorage) LPop(key string) (string, error) {
@@ -86,22 +79,21 @@ func (s *JTStorage) LPop(key string) (string, error) {
 
 	i, ok := s.data[key]
 	if !ok {
-		return "$-1", nil
+		return "", ErrorIsNotExist
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return "$-1", ErrorWrongType
+		return "", ErrorWrongType
 	}
 
 	if len(li.Data) == 0 {
-		return "$-1", nil
+		return "", nil
 	}
 
 	var pop string
 	pop, li.Data = li.Data[0], li.Data[1:]
-	res := fmt.Sprintf("$%d\r\n%s", len(pop), pop)
-	return res, nil
+	return pop, nil
 }
 
 func (s *JTStorage) RPop(key string) (string, error) {
@@ -110,7 +102,7 @@ func (s *JTStorage) RPop(key string) (string, error) {
 
 	i, ok := s.data[key]
 	if !ok {
-		return "$-1", nil
+		return "", ErrorIsNotExist
 	}
 
 	li, ok := i.(*ListItem)
@@ -119,27 +111,26 @@ func (s *JTStorage) RPop(key string) (string, error) {
 	}
 
 	if len(li.Data) == 0 {
-		return "$-1", nil
+		return "", nil
 	}
 
 	pop := li.Data[len(li.Data)-1]
 	li.Data = li.Data[:len(li.Data)-1]
-	res := fmt.Sprintf("$%d\r\n%s", len(pop), pop)
-	return res, nil
+	return pop, nil
 }
 
-func (s *JTStorage) LRem(key string, count int, val string) (string, error) {
+func (s *JTStorage) LRem(key string, count int, val string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0, ErrorIsNotExist
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
 	newData := make([]string, 0)
@@ -183,8 +174,7 @@ func (s *JTStorage) LRem(key string, count int, val string) (string, error) {
 	rcount := len(li.Data) - len(newData)
 	li.Data = newData
 
-	res := fmt.Sprintf(":%d", rcount)
-	return res, nil
+	return rcount, nil
 }
 
 func (s *JTStorage) LIndex(key string, index int) (string, error) {
@@ -193,7 +183,7 @@ func (s *JTStorage) LIndex(key string, index int) (string, error) {
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return "", ErrorIsNotExist
 	}
 
 	li, ok := i.(*ListItem)
@@ -207,31 +197,30 @@ func (s *JTStorage) LIndex(key string, index int) (string, error) {
 	}
 
 	if index > ldata || index < 0 {
-		return "$-1", nil
+		return "", nil
 	}
 
 	data := li.Data[index]
-	res := fmt.Sprintf(":%d\r\n%s", len(data), data)
-	return res, nil
+	return data, nil
 }
 
-func (s *JTStorage) LRange(key string, start, end int) (string, error) {
+func (s *JTStorage) LRange(key string, start, end int) ([]string, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return "*0", nil
+		return []string{}, nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return "", ErrorWrongType
+		return []string{}, ErrorWrongType
 	}
 
 	ldata := len(li.Data)
 	if start > ldata {
-		return "*0", nil
+		return []string{}, nil
 	}
 
 	if start < 0 {
@@ -249,32 +238,25 @@ func (s *JTStorage) LRange(key string, start, end int) (string, error) {
 	}
 
 	if start > end {
-		return "*0", nil
+		return []string{}, nil
 	}
 
-	result := []string{}
-	for i := start; i <= end; i++ {
-		result = append(result, fmt.Sprintf("$%d", len(li.Data[i])), li.Data[i])
-	}
-
-	res := fmt.Sprintf("*%d\r\n%s", len(result)/2, strings.Join(result, "\r\n"))
-	return res, nil
+	return li.Data[start : end+1], nil
 }
 
-func (s *JTStorage) LLen(key string) (string, error) {
+func (s *JTStorage) LLen(key string) (int, error) {
 	s.l.Lock()
 	defer s.l.Unlock()
 
 	i, ok := s.data[key]
 	if !ok {
-		return ":0", nil
+		return 0, nil
 	}
 
 	li, ok := i.(*ListItem)
 	if !ok {
-		return "", ErrorWrongType
+		return 0, ErrorWrongType
 	}
 
-	res := fmt.Sprintf(":%d", len(li.Data))
-	return res, nil
+	return len(li.Data), nil
 }
