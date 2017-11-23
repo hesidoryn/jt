@@ -8,7 +8,9 @@ import (
 )
 
 func main() {
-	client, err := jtclient.NewClient("client-config.json")
+	client, err := jtclient.NewClient(jtclient.Options{
+		Host: "localhost:4567",
+	})
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)

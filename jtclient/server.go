@@ -2,7 +2,7 @@ package jtclient
 
 // Auth sends auth command
 func (c *Client) Auth() error {
-	_, err := c.sendCommand("AUTH", c.config.Password)
+	_, err := c.sendCommand("AUTH", c.options.Password)
 	return err
 }
 
