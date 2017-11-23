@@ -1,4 +1,16 @@
 ## TEST #1 - Servers performance test
+### Yet another [benchmark](https://github.com/hesidoryn/jt/blob/master/storage/benchmark_test.go):
+```shell
+BenchmarkSet-4     	 1000000	      1157 ns/op	     215 B/op	       2 allocs/op
+BenchmarkGet-4     	10000000	       168 ns/op	       7 B/op	       1 allocs/op
+BenchmarkIncr-4    	 2000000	      1473 ns/op	     215 B/op	       3 allocs/op
+BenchmarkLPush-4   	 1000000	      1262 ns/op	     239 B/op	       4 allocs/op
+BenchmarkRPush-4   	 1000000	      1523 ns/op	     239 B/op	       4 allocs/op
+BenchmarkLPop-4    	10000000	       167 ns/op	       7 B/op	       1 allocs/op
+BenchmarkRPop-4    	10000000	       167 ns/op	       7 B/op	       1 allocs/op
+```
+
+
 ### redis-benchmark -t ping_inline,set,get,incr,lpop,rpop,lpush,rpush,lrange -n 100000 -q
 
 JT:
