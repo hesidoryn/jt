@@ -5,32 +5,24 @@
 git clone git@github.com:hesidoryn/jt.git
 cd jt
 go build
-./jt -config=config.json
+./jt -port=4567 -password=asdf -dump=dump.db
 ```
 ### Configuration
 #### Basic configuration:
-Port is mandatory.
-```json
-{
-    "port": "3333"
-}
+Default port is 3333. You can specify port using `port` flag, i.e.:
+```
+./jt -port=4567
 ```
 
 #### Security
-JT provides a tiny layer of authentication. A client can authenticate itself by sending the AUTH command followed by the password. You can specify password in `config.json` file:
-```json
-{
-    "port": "3333",
-    "password": "Password!"
-}
+JT provides a tiny layer of authentication. A client can authenticate itself by sending the AUTH command followed by the password. You can specify password using `password` flag, i.e.:
+```
+./jt -password=asdf
 ```
 
 #### Persistence
 You can create point-in-time snapshots of the dataset by using SAVE command.
-You need to specify path to file with snapshot in `config.json` file:
-```json
-{
-    "port": "3333",
-    "db": "dump.db"
-}
+You need to specify path to file with snapshot using `dump` flag, i.e.:
+```
+./jt -dump=dump.db
 ```
