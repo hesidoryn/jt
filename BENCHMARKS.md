@@ -50,7 +50,7 @@ LRANGE_600 (first 600 elements): 14283.67 requests per second
 
 ## TEST #2 - jt client performance test
 
-### [bench.go](https://github.com/hesidoryn/jt/blob/master/_examples/bench.go):
+### [bench.go](https://github.com/hesidoryn/jt/blob/master/_examples/benchmark/bench.go):
 ```shell
 PING_INLINE: 53101.11 requests per second
 SET: 45783.09 requests per second
