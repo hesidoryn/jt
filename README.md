@@ -3,30 +3,6 @@
 ## Installation
 [here](https://github.com/hesidoryn/jt/blob/master/DEPLOYMENT.md)
 
-## Quickstart
-```go
-func SomeExamples() {
-	client, err := jtclient.NewClient("client-config.json")
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	err = client.Set("k", "value")
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	resGet, err := client.Get("k")
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-	log.Println(resGet)
-}
-```
-
 ## Examples
 [here](https://github.com/hesidoryn/jt/tree/master/_examples)
 
