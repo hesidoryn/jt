@@ -2,12 +2,10 @@ package storage
 
 import (
 	"testing"
-
-	"github.com/hesidoryn/jt/config"
 )
 
 func TestLPop(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "lpop"
 	// key doesn't exist in storage
 	res, err := s.LPop(key)

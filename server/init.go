@@ -13,16 +13,9 @@ import (
 	"github.com/hesidoryn/jt/storage"
 )
 
-type client struct {
-	conn         net.Conn
-	w            *bufio.Writer
-	sc           *bufio.Scanner
-	password     string
-	isAuthorized bool
-}
-
 type JTServer struct {
-	routes map[string]jtHandlerFunc
+	routes   map[string]jtHandlerFunc
+	password string
 }
 
 func (s *JTServer) Handle(command string, handler jtHandlerFunc, ms ...jtMiddlewareFunc) {
@@ -31,6 +24,14 @@ func (s *JTServer) Handle(command string, handler jtHandlerFunc, ms ...jtMiddlew
 		result = m(result)
 	}
 	s.routes[command] = result
+}
+
+type client struct {
+	conn         net.Conn
+	w            *bufio.Writer
+	sc           *bufio.Scanner
+	password     string
+	isAuthorized bool
 }
 
 var (
@@ -61,7 +62,7 @@ const (
 
 // Init function inits tcp server
 func Init(config config.Config) {
-	jtStorage = storage.Init(config)
+	jtStorage = storage.Init(config.DumpFile)
 
 	password = config.Password
 	jtServer := &JTServer{
@@ -69,7 +70,7 @@ func Init(config config.Config) {
 	}
 	jtServer.loadRoutes()
 
-	listen, err := net.Listen("tcp4", ":"+config.Port)
+	listen, err := net.Listen("tcp", ":"+config.Port)
 	defer listen.Close()
 	if err != nil {
 		log.Fatalf("Socket listen port %s failed,%s", config.Port, err)
@@ -84,16 +85,14 @@ func Init(config config.Config) {
 			continue
 		}
 
-		writer := bufio.NewWriter(conn)
-		scanner := bufio.NewScanner(conn)
 		isAuth := false
 		if password == "" {
 			isAuth = true
 		}
 		c := &client{
 			conn:         conn,
-			w:            writer,
-			sc:           scanner,
+			w:            bufio.NewWriter(conn),
+			sc:           bufio.NewScanner(conn),
 			isAuthorized: isAuth,
 		}
 		go jtServer.handleConnection(c)
@@ -104,17 +103,16 @@ func (s *JTServer) handleConnection(c *client) {
 	defer c.conn.Close()
 
 	context := jtContext{client: c}
+	for c.sc.Scan() {
+		ln := c.sc.Bytes()
+		if len(ln) == 0 {
+			continue
+		}
 
-	scanner := bufio.NewScanner(c.conn)
-	for scanner.Scan() {
-		ln := scanner.Bytes()
 		args, err := parseArgs(ln)
 		if err != nil {
 			context.sendResult(errorProtocolError)
 			return
-		}
-		if len(args) == 0 {
-			continue
 		}
 
 		command := string(bytes.ToUpper(args[0]))
@@ -124,8 +122,7 @@ func (s *JTServer) handleConnection(c *client) {
 			continue
 		}
 
-		context.command = command
-		context.args = args
+		context.command, context.args = command, args
 		handler(context)
 	}
 }

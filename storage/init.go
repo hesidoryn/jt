@@ -19,21 +19,20 @@ import (
 	"sync"
 
 	"github.com/boltdb/bolt"
-	"github.com/hesidoryn/jt/config"
 )
 
 // dump with jt data
 var dump = "dump.db"
 
 // Init inits storage module and load dump db if needed
-func Init(config config.Config) *JTStorage {
+func Init(dumpfile string) *JTStorage {
 	s := &JTStorage{
 		l:    sync.Mutex{},
 		data: map[string]Item{},
 	}
 
-	if config.DumpFile != "" {
-		dump = config.DumpFile
+	if dumpfile != "" {
+		dump = dumpfile
 		s.loadDump(dump)
 	}
 

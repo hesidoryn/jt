@@ -4,7 +4,7 @@ import "fmt"
 
 type jtMiddlewareFunc func(jtHandlerFunc) jtHandlerFunc
 
-func mAuth() jtMiddlewareFunc {
+func mIsAuthorized() jtMiddlewareFunc {
 	return func(next jtHandlerFunc) jtHandlerFunc {
 		return func(c jtContext) {
 			if !c.client.isAuthorized {

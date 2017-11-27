@@ -3,12 +3,10 @@ package storage
 import (
 	"strconv"
 	"testing"
-
-	"github.com/hesidoryn/jt/config"
 )
 
 func TestGet(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "get"
 	// get key doesn't exist in storage
 	res, err := s.Get(key)
@@ -45,7 +43,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "append"
 	testData := " World!"
 
@@ -84,7 +82,7 @@ func TestAppend(t *testing.T) {
 }
 
 func TestGetSet(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "getset"
 	testData := " World!"
 
@@ -123,7 +121,7 @@ func TestGetSet(t *testing.T) {
 }
 
 func TestStrlen(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "strlen"
 	testData := " World!"
 
@@ -161,7 +159,7 @@ func TestStrlen(t *testing.T) {
 }
 
 func TestIncrBy(t *testing.T) {
-	s := Init(config.Config{})
+	s := Init("")
 	key := "incrby"
 	by := 5
 
